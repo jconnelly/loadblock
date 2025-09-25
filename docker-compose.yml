@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: loadblock-postgres
+    environment:
+      POSTGRES_DB: loadblock_dev
+      POSTGRES_USER: loadblock_user
+      POSTGRES_PASSWORD: loadblock_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql:/docker-entrypoint-initdb.d
+    networks:
+      - loadblock-network
+
+  # Redis (for session storage)
+  redis:
+    image: redis:7-alpine
+    container_name: loadblock-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - loadblock-network
+
+  # IPFS Node
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: loadblock-ipfs
+    ports:
+      - "4001:4001"   # Swarm port
+      - "5001:5001"   # API port
+      - "8080:8080"   # Gateway port
+    volumes:
+      - ipfs_data:/data/ipfs
+      - ./ipfs/config:/config
+    networks:
+      - loadblock-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: loadblock-backend
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=loadblock_dev
+      - DB_USER=loadblock_user
+      - DB_PASSWORD=loadblock_password
+      - IPFS_HOST=ipfs
+      - IPFS_PORT=5001
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+      - ipfs
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/temp:/app/temp
+    networks:
+      - loadblock-network
+    command: npm run dev
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: loadblock-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - loadblock-network
+    command: npm start
+
+volumes:
+  postgres_data:
+  ipfs_data:
+
+networks:
+  loadblock-network:
+    driver: bridge

@@ -1,0 +1,313 @@
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap");
+html, body {
+  margin: 0;
+  padding: 0;
+  height: auto;
+  width: 100%;
+  font-family: "Open Sans", sans-serif;
+  font-size: 14px;
+  color: #000; }
+
+.bgGradient {
+  background: linear-gradient(to right bottom, #ADDCEE, #EBD0B0);
+  min-height: 100vh;
+  height: auto !important;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: cover; }
+
+.bgWhite {
+  background: #fff; }
+
+.text-muted {
+  color: #b2b3c1 !important; }
+
+input, select, textarea {
+  outline: 0 !important;
+  box-shadow: none !important;
+  box-sizing: none !important; }
+
+.imgCircle {
+  border-radius: 50%; }
+
+.img45 {
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  border: 4px solid #D0D5DF;
+  object-fit: cover;
+  overflow: hidden; }
+
+.bgGrey {
+  background: #f7f8fa; }
+
+.mt-6 {
+  margin-top: 3.5rem; }
+
+.mt-7 {
+  margin-top: 4rem; }
+
+.mt-8 {
+  margin-top: 4.5rem; }
+
+.mt-9 {
+  margin-top: 5rem; }
+
+.mt-10 {
+  margin-top: 5.5rem; }
+
+.container-fluid {
+  padding-left: 30px;
+  padding-right: 30px; }
+
+.navFox {
+  width: 100%;
+  height: 80px;
+  background: #fff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); }
+  .navFox .left {
+    margin-top: 20px; }
+  .navFox .right {
+    float: right;
+    margin-top: 15px; }
+    .navFox .right .media-body .dropdown {
+      cursor: pointer; }
+
+.btn-primary {
+  background: #00A8E4;
+  border-color: #00A8E4; }
+  .btn-primary:hover {
+    background: #018CBE;
+    border-color: #018CBE; }
+
+.text-primary {
+  color: #00A8E4 !important; }
+
+.containSignup {
+  padding-top: 30px;
+  background: url(../img/Mask_Group_3.png);
+  background-position: top center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 300px; }
+  .containSignup .cBanner {
+    margin-bottom: 30px; }
+    .containSignup .cBanner .card-body {
+      padding: 60px; }
+  .containSignup .cForm {
+    margin-bottom: 30px; }
+    .containSignup .cForm .card-body {
+      padding: 60px; }
+    .containSignup .cForm input, .containSignup .cForm select {
+      background: #F3F4F5;
+      border: 0;
+      color: #6A6D81;
+      height: 55px; }
+
+.menuTabFox {
+  margin-top: 30px; }
+  .menuTabFox .left {
+    background: #00A8E4;
+    padding: 15px;
+    text-align: center;
+    color: #fff; }
+  .menuTabFox .right .nav .nav-item .nav-link {
+    padding-top: 13px;
+    padding-bottom: 13px;
+    border-radius: 0;
+    font-weight: 600;
+    color: #35363A; }
+  .menuTabFox .right .nav .nav-item .active {
+    font-weight: 600;
+    background: transparent;
+    color: #00A8E4;
+    border-bottom: 4px solid #00A8E4; }
+
+.mainContent .contentTwitter {
+  margin-top: 30px; }
+  .mainContent .contentTwitter .card-header .twitterLogo {
+    height: 35px;
+    width: 35px;
+    background: #50ABF1;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 25px;
+    text-align: center;
+    margin-right: 10px; }
+  .mainContent .contentTwitter .card-header .media-body {
+    font-weight: 600; }
+  .mainContent .contentTwitter .card-body .media {
+    margin-bottom: 30px; }
+    .mainContent .contentTwitter .card-body .media img.thumbMedia {
+      height: 50px;
+      width: 50px;
+      object-fit: cover;
+      overflow: hidden;
+      border-radius: 50%; }
+    .mainContent .contentTwitter .card-body .media .media-body h5 {
+      font-size: 14px;
+      font-weight: 600; }
+      .mainContent .contentTwitter .card-body .media .media-body h5 span {
+        color: #657786; }
+    .mainContent .contentTwitter .card-body .media .media-body span, .mainContent .contentTwitter .card-body .media .media-body a {
+      color: #657786; }
+.mainContent .contentTable {
+  margin-top: 30px; }
+  .mainContent .contentTable .card-body table.table thead tr th {
+    border-top: none;
+    border-bottom: 1.5px dashed #ddd !important;
+    padding-bottom: 20px; }
+  .mainContent .contentTable .card-body table.table tbody tr {
+    font-weight: 600; }
+    .mainContent .contentTable .card-body table.table tbody tr span {
+      border-radius: 4px; }
+    .mainContent .contentTable .card-body table.table tbody tr td {
+      padding-top: 30px;
+      padding-bottom: 30px;
+      border-top: 1.5px dashed #ddd !important; }
+    .mainContent .contentTable .card-body table.table tbody tr:first-child td {
+      padding-top: 50px; }
+
+.customizeModal .modal-header {
+  position: relative; }
+  .customizeModal .modal-header .modal-title {
+    font-weight: 600; }
+  .customizeModal .modal-header .close {
+    background: #f1f1f1;
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+    padding: 0 !important;
+    position: absolute;
+    float: 0;
+    right: 25px;
+    top: 25px; }
+.customizeModal .modal-body input {
+  height: 50px; }
+.customizeModal .modal-body .form-group {
+  margin-bottom: 30px; }
+.customizeModal table.table thead tr th {
+  border-top: none;
+  border-bottom: 1.5px dashed #ddd !important;
+  padding-bottom: 20px; }
+.customizeModal table.table tbody tr {
+  font-weight: 600; }
+  .customizeModal table.table tbody tr span {
+    border-radius: 4px; }
+  .customizeModal table.table tbody tr td {
+    padding-top: 30px;
+    padding-bottom: 30px;
+    border-top: 1.5px dashed #ddd !important; }
+  .customizeModal table.table tbody tr:first-child td {
+    padding-top: 50px; }
+
+.contentWorker {
+  margin-top: 30px; }
+  .contentWorker .nav .nav-item .nav-link {
+    padding-top: 13px;
+    padding-bottom: 13px;
+    border-radius: 0;
+    font-weight: 600;
+    color: #35363A;
+    font-size: 12px; }
+  .contentWorker .nav .nav-item .active {
+    font-weight: 600;
+    background: transparent;
+    color: #00A8E4;
+    border-bottom: 4px solid #00A8E4; }
+  .contentWorker .searchBox {
+    background: #F1F2F4;
+    padding: 15px; }
+    .contentWorker .searchBox .input-group-text {
+      background: #fff;
+      border-right-color: transparent !important;
+      z-index: 2;
+      position: relative;
+      left: 2px;
+      border-top-left-radius: 15px !important;
+      border-bottom-left-radius: 15px !important; }
+    .contentWorker .searchBox input {
+      border-top-right-radius: 15px !important;
+      border-bottom-right-radius: 15px !important; }
+  .contentWorker .listWorker {
+    min-height: 625px; }
+    .contentWorker .listWorker .item {
+      padding: 30px;
+      border-bottom: 1px solid #ddd; }
+      .contentWorker .listWorker .item .thumbWorker {
+        height: 64px;
+        width: 64px;
+        text-align: center;
+        margin-right: 25px;
+        border-radius: 50%;
+        background: #00A8E4;
+        padding-top: 2px; }
+        .contentWorker .listWorker .item .thumbWorker img {
+          height: 60px;
+          width: 60px;
+          object-fit: cover;
+          overflow: hidden;
+          border-radius: 50%;
+          border: 2px solid #fff; }
+      .contentWorker .listWorker .item h5 {
+        font-weight: 600;
+        margin-top: 15px; }
+    .contentWorker .listWorker .active {
+      background: #EAF6FB; }
+
+.profileWorker {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  position: relative;
+  width: 100%;
+  height: auto; }
+  .profileWorker .containPW {
+    width: 100%;
+    height: auto;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 30px 15px;
+    min-height: 738px; }
+  .profileWorker .avatar {
+    text-align: center; }
+    .profileWorker .avatar img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      overflow: hidden;
+      border-radius: 50%;
+      margin-bottom: 15px; }
+    .profileWorker .avatar h4 {
+      font-weight: 600; }
+  .profileWorker .listInfo {
+    width: 100%; }
+    .profileWorker .listInfo .item {
+      margin-top: 30px;
+      width: 100%;
+      display: block;
+      border: 1px solid #B2B9D1;
+      position: relative;
+      padding: 15px 25px;
+      border-radius: 5px;
+      font-size: 16px; }
+      .profileWorker .listInfo .item span.label {
+        background: #fff;
+        padding: 0 15px;
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        font-size: 12px;
+        color: #B2B9D1;
+        font-weight: 600; }
+
+@media (max-width: 576px) {
+  .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px; }
+
+  .containSignup .cBanner .card-body {
+    padding: 30px; }
+  .containSignup .cForm .card-body {
+    padding: 30px; } }
+
+/*# sourceMappingURL=style-all.css.map */
