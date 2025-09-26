@@ -69,3 +69,6 @@ infrastructure/aws/terraform/**/*.tfvars
 *.pem
 *.crt
 !blockchain/network/crypto-config-template/
+
+# Archive folder
+ARCHIVE_GITIGNORE/

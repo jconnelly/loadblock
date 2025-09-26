@@ -1,0 +1,79 @@
+{
+  "name": "loadblock-backend",
+  "version": "1.0.0",
+  "description": "LoadBlock Backend API - Blockchain-based Bill of Lading management system",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch --detectOpenHandles",
+    "test:coverage": "jest --coverage --detectOpenHandles",
+    "test:integration": "jest --testPathPattern=integration --detectOpenHandles",
+    "lint": "eslint src/ --ext .js",
+    "lint:fix": "eslint src/ --ext .js --fix",
+    "migrate": "node src/database/migrate.js migrate",
+    "migrate:status": "node src/database/migrate.js status",
+    "seed": "node src/database/seeders/index.js",
+    "logs": "mkdir -p logs"
+  },
+  "keywords": [
+    "blockchain",
+    "bill-of-lading",
+    "freight",
+    "trucking",
+    "hyperledger-fabric",
+    "ipfs"
+  ],
+  "author": "LoadBlock Development Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^6.8.1",
+    "compression": "^1.7.4",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.1",
+    "pg": "^8.11.1",
+    "express-validator": "^7.0.1",
+    "winston": "^3.10.0",
+    "uuid": "^9.0.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.6.1",
+    "supertest": "^6.3.3",
+    "eslint": "^8.45.0",
+    "@types/jest": "^29.5.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js",
+      "!src/**/*.spec.js",
+      "!src/database/migrations/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "verbose": true
+  }
+}
