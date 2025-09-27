@@ -137,7 +137,6 @@ Develop a comprehensive blockchain-based Bill of Lading management platform that
 - [ ] Multi-role user support
 - [ ] Role-specific dashboards and UI
 - [ ] Permission-based API endpoint protection
-- [ ] Contact management system
 - [ ] User management for admins
 
 #### Week 12: Document Management & Versioning
@@ -154,6 +153,34 @@ Develop a comprehensive blockchain-based Bill of Lading management platform that
 - Multi-role user management
 - Document versioning and history
 - Advanced search and filtering
+
+---
+
+### Phase 3.5: UI/UX Polish & User Experience (Week 12.5)
+**Duration:** 0.5 weeks
+**Team Focus:** Design System & User Experience Optimization
+
+#### Week 12.5: UI/UX Polish & Accessibility
+- [ ] Professional design system refinement and consistency audit
+- [ ] Accessibility compliance (WCAG 2.1 AA standards)
+- [ ] Mobile responsiveness optimization and testing
+- [ ] Loading states, animations, and micro-interactions
+- [ ] Error messaging and user feedback improvements
+- [ ] User workflow optimization and usability testing
+- [ ] Performance optimization for UI components
+- [ ] Cross-browser compatibility testing
+- [ ] **Form UX Improvements**:
+  - [ ] Make required field asterisks (*) more prominent with red/bold styling
+  - [ ] Implement dynamic "Next" button states (disabled/grayed until required fields complete)
+  - [ ] Enhanced visual feedback for form validation errors
+  - [ ] Improved field focus states and validation messaging
+
+**Phase 3.5 Deliverables:**
+- Polished, professional user interface
+- Accessibility-compliant design system
+- Optimized user workflows and interactions
+- Mobile-first responsive design
+- Comprehensive UI/UX documentation
 
 ---
 
@@ -184,6 +211,15 @@ Develop a comprehensive blockchain-based Bill of Lading management platform that
 - [ ] Automated backup systems
 - [ ] Load testing and performance validation
 - [ ] User acceptance testing (UAT)
+
+#### Week 15.5: Contact Management System (Optional Enhancement)
+- [ ] Contact database design and implementation
+- [ ] Contact CRUD operations (Create, Read, Update, Delete)
+- [ ] Contact search and filtering functionality
+- [ ] Integration with BoL creation forms (auto-complete)
+- [ ] Role-based contact access and permissions
+- [ ] Contact import/export capabilities
+- [ ] Contact management UI components
 
 #### Week 16: Launch Preparation
 - [ ] Production deployment automation
@@ -302,9 +338,10 @@ Develop a comprehensive blockchain-based Bill of Lading management platform that
 | Phase 1 | Weeks 1-4 | Foundation | Core platform with authentication |
 | Phase 2 | Weeks 5-8 | Blockchain | Blockchain integration and IPFS |
 | Phase 3 | Weeks 9-12 | Features | Professional BoL and workflow |
+| Phase 3.5 | Week 12.5 | UI/UX Polish | Professional user experience |
 | Phase 4 | Weeks 13-16 | Production | AWS deployment and launch |
 
-**Total Project Duration:** 16 weeks
+**Total Project Duration:** 16.5 weeks
 **Estimated Launch Date:** January 2026
 
 ---

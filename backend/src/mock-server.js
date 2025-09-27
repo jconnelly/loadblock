@@ -269,6 +269,480 @@ app.post('/api/v1/auth/logout', (req, res) => {
   });
 });
 
+// Mock BoL database
+let bols = [
+  {
+    id: '1',
+    bolNumber: 'BOL-2025-000001',
+    status: 'pending',
+    shipper: {
+      id: '1',
+      companyName: 'Acme Manufacturing',
+      contactName: 'John Smith',
+      email: 'john@acme.com',
+      phone: '555-0101',
+      address: {
+        street: '123 Industrial Blvd',
+        city: 'Chicago',
+        state: 'IL',
+        zipCode: '60601',
+        country: 'USA'
+      },
+      dotNumber: 'DOT123456',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    consignee: {
+      id: '2',
+      companyName: 'Global Retailers Inc',
+      contactName: 'Jane Doe',
+      email: 'jane@globalretailers.com',
+      phone: '555-0202',
+      address: {
+        street: '456 Commerce St',
+        city: 'Dallas',
+        state: 'TX',
+        zipCode: '75201',
+        country: 'USA'
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    carrier: {
+      id: '3',
+      companyName: 'Swift Transport LLC',
+      contactName: 'Mike Johnson',
+      email: 'mike@swifttransport.com',
+      phone: '555-0303',
+      address: {
+        street: '789 Logistics Way',
+        city: 'Atlanta',
+        state: 'GA',
+        zipCode: '30301',
+        country: 'USA'
+      },
+      dotNumber: 'DOT789012',
+      mcNumber: 'MC123456',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    cargoItems: [
+      {
+        id: '1',
+        description: 'Industrial Equipment Parts',
+        quantity: 50,
+        unit: 'pieces',
+        weight: 2500,
+        value: 75000,
+        packaging: 'Wooden Crates',
+        hazmat: false
+      }
+    ],
+    totalWeight: 2500,
+    totalValue: 75000,
+    pickupDate: new Date(Date.now() + 24*60*60*1000).toISOString(),
+    freightCharges: {
+      baseRate: 2500,
+      fuelSurcharge: 200,
+      accessorialCharges: 150,
+      totalCharges: 2850,
+      paymentTerms: 'collect',
+      billTo: 'consignee'
+    },
+    createdBy: '1',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    version: 1
+  },
+  {
+    id: '2',
+    bolNumber: 'BOL-2025-000002',
+    status: 'assigned',
+    shipper: {
+      id: '4',
+      companyName: 'Tech Solutions Corp',
+      contactName: 'Sarah Wilson',
+      email: 'sarah@techsolutions.com',
+      phone: '555-0404',
+      address: {
+        street: '321 Tech Park Dr',
+        city: 'Austin',
+        state: 'TX',
+        zipCode: '78701',
+        country: 'USA'
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    consignee: {
+      id: '5',
+      companyName: 'West Coast Electronics',
+      contactName: 'David Chen',
+      email: 'david@westcoast.com',
+      phone: '555-0505',
+      address: {
+        street: '654 Silicon Valley Rd',
+        city: 'San Francisco',
+        state: 'CA',
+        zipCode: '94102',
+        country: 'USA'
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    carrier: {
+      id: '3',
+      companyName: 'Swift Transport LLC',
+      contactName: 'Mike Johnson',
+      email: 'mike@swifttransport.com',
+      phone: '555-0303',
+      address: {
+        street: '789 Logistics Way',
+        city: 'Atlanta',
+        state: 'GA',
+        zipCode: '30301',
+        country: 'USA'
+      },
+      dotNumber: 'DOT789012',
+      mcNumber: 'MC123456',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    cargoItems: [
+      {
+        id: '2',
+        description: 'Server Equipment',
+        quantity: 20,
+        unit: 'units',
+        weight: 1200,
+        value: 125000,
+        packaging: 'Original Boxes',
+        hazmat: false
+      }
+    ],
+    totalWeight: 1200,
+    totalValue: 125000,
+    pickupDate: new Date(Date.now() + 2*24*60*60*1000).toISOString(),
+    freightCharges: {
+      baseRate: 1800,
+      fuelSurcharge: 150,
+      accessorialCharges: 100,
+      totalCharges: 2050,
+      paymentTerms: 'prepaid',
+      billTo: 'shipper'
+    },
+    createdBy: '2',
+    assignedDriver: {
+      id: '1',
+      name: 'Tom Rodriguez',
+      licenseNumber: 'CDL123456789',
+      phone: '555-0606',
+      email: 'tom@swifttransport.com',
+      vehicleInfo: {
+        tractorNumber: 'TRC-001',
+        trailerNumber: 'TRL-001',
+        make: 'Freightliner',
+        model: 'Cascadia',
+        year: 2022,
+        licenseePlate: 'ABC-123'
+      }
+    },
+    createdAt: new Date(Date.now() - 2*24*60*60*1000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    version: 2
+  }
+];
+
+let bolCounter = 3;
+
+// Helper function to generate BoL number
+const generateBoLNumber = () => {
+  const year = new Date().getFullYear();
+  const number = String(bolCounter++).padStart(6, '0');
+  return `BOL-${year}-${number}`;
+};
+
+// BoL CRUD endpoints
+
+// Get all BoLs with filtering and pagination
+app.get('/api/v1/bol', authenticate, (req, res) => {
+  console.log('Get BoLs request:', req.query);
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const status = req.query.status;
+  const search = req.query.search;
+
+  let filteredBols = [...bols];
+
+  // Filter by status
+  if (status) {
+    const statusArray = Array.isArray(status) ? status : [status];
+    filteredBols = filteredBols.filter(bol => statusArray.includes(bol.status));
+  }
+
+  // Search functionality
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filteredBols = filteredBols.filter(bol =>
+      bol.bolNumber.toLowerCase().includes(searchLower) ||
+      bol.shipper.companyName.toLowerCase().includes(searchLower) ||
+      bol.consignee.companyName.toLowerCase().includes(searchLower)
+    );
+  }
+
+  // Role-based filtering
+  if (req.user.roles.includes('carrier') && !req.user.roles.includes('admin')) {
+    filteredBols = filteredBols.filter(bol => bol.carrier.id === req.user.id || bol.createdBy === req.user.id);
+  } else if (req.user.roles.includes('shipper') && !req.user.roles.includes('admin')) {
+    filteredBols = filteredBols.filter(bol => bol.shipper.id === req.user.id || bol.createdBy === req.user.id);
+  }
+
+  // Pagination
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedBols = filteredBols.slice(startIndex, endIndex);
+
+  res.json({
+    success: true,
+    data: {
+      bols: paginatedBols,
+      pagination: {
+        page,
+        limit,
+        total: filteredBols.length,
+        totalPages: Math.ceil(filteredBols.length / limit)
+      }
+    }
+  });
+});
+
+// Get specific BoL
+app.get('/api/v1/bol/:id', authenticate, (req, res) => {
+  const bol = bols.find(b => b.id === req.params.id);
+
+  if (!bol) {
+    return res.status(404).json({
+      success: false,
+      message: 'BoL not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    data: bol
+  });
+});
+
+// Create new BoL
+app.post('/api/v1/bol', authenticate, (req, res) => {
+  console.log('Create BoL request:', req.body);
+
+  const newBoL = {
+    id: String(bolCounter),
+    bolNumber: generateBoLNumber(),
+    status: 'pending',
+    ...req.body,
+    createdBy: req.user.id,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    version: 1
+  };
+
+  // Calculate totals
+  newBoL.totalWeight = newBoL.cargoItems.reduce((sum, item) => sum + item.weight, 0);
+  newBoL.totalValue = newBoL.cargoItems.reduce((sum, item) => sum + item.value, 0);
+
+  bols.push(newBoL);
+
+  res.status(201).json({
+    success: true,
+    data: newBoL,
+    message: 'BoL created successfully'
+  });
+});
+
+// Update BoL
+app.put('/api/v1/bol/:id', authenticate, (req, res) => {
+  const bolIndex = bols.findIndex(b => b.id === req.params.id);
+
+  if (bolIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'BoL not found'
+    });
+  }
+
+  const existingBoL = bols[bolIndex];
+
+  // Role-based update permissions
+  const canUpdate = req.user.roles.includes('admin') ||
+                   req.user.roles.includes('carrier') ||
+                   existingBoL.createdBy === req.user.id;
+
+  if (!canUpdate) {
+    return res.status(403).json({
+      success: false,
+      message: 'Insufficient permissions to update this BoL'
+    });
+  }
+
+  const updatedBoL = {
+    ...existingBoL,
+    ...req.body,
+    updatedAt: new Date().toISOString(),
+    version: existingBoL.version + 1
+  };
+
+  // Recalculate totals if cargo items changed
+  if (req.body.cargoItems) {
+    updatedBoL.totalWeight = updatedBoL.cargoItems.reduce((sum, item) => sum + item.weight, 0);
+    updatedBoL.totalValue = updatedBoL.cargoItems.reduce((sum, item) => sum + item.value, 0);
+  }
+
+  bols[bolIndex] = updatedBoL;
+
+  res.json({
+    success: true,
+    data: updatedBoL,
+    message: 'BoL updated successfully'
+  });
+});
+
+// Update BoL status
+app.patch('/api/v1/bol/:id/status', authenticate, (req, res) => {
+  const bolIndex = bols.findIndex(b => b.id === req.params.id);
+
+  if (bolIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'BoL not found'
+    });
+  }
+
+  const { status, notes } = req.body;
+  const existingBoL = bols[bolIndex];
+
+  // Status transition validation
+  const validTransitions = {
+    'pending': ['approved'],
+    'approved': ['assigned'],
+    'assigned': ['accepted'],
+    'accepted': ['picked_up'],
+    'picked_up': ['en_route'],
+    'en_route': ['delivered'],
+    'delivered': ['unpaid'],
+    'unpaid': ['paid']
+  };
+
+  if (!validTransitions[existingBoL.status]?.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid status transition from ${existingBoL.status} to ${status}`
+    });
+  }
+
+  const updatedBoL = {
+    ...existingBoL,
+    status,
+    updatedAt: new Date().toISOString(),
+    version: existingBoL.version + 1
+  };
+
+  // Add note if provided
+  if (notes) {
+    if (!updatedBoL.notes) updatedBoL.notes = [];
+    updatedBoL.notes.push({
+      id: String(Date.now()),
+      content: notes,
+      createdBy: req.user.id,
+      createdAt: new Date().toISOString(),
+      noteType: 'status_change'
+    });
+  }
+
+  bols[bolIndex] = updatedBoL;
+
+  res.json({
+    success: true,
+    data: updatedBoL,
+    message: `BoL status updated to ${status}`
+  });
+});
+
+// Delete BoL (soft delete by changing status)
+app.delete('/api/v1/bol/:id', authenticate, (req, res) => {
+  const bolIndex = bols.findIndex(b => b.id === req.params.id);
+
+  if (bolIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'BoL not found'
+    });
+  }
+
+  const existingBoL = bols[bolIndex];
+
+  // Only admin or creator can delete
+  if (!req.user.roles.includes('admin') && existingBoL.createdBy !== req.user.id) {
+    return res.status(403).json({
+      success: false,
+      message: 'Insufficient permissions to delete this BoL'
+    });
+  }
+
+  // Only allow deletion if status is pending
+  if (existingBoL.status !== 'pending') {
+    return res.status(400).json({
+      success: false,
+      message: 'Can only delete BoLs in pending status'
+    });
+  }
+
+  bols.splice(bolIndex, 1);
+
+  res.json({
+    success: true,
+    message: 'BoL deleted successfully'
+  });
+});
+
+// Get BoL statistics
+app.get('/api/v1/bol/stats', authenticate, (req, res) => {
+  let userBols = bols;
+
+  // Filter by user role
+  if (!req.user.roles.includes('admin')) {
+    if (req.user.roles.includes('carrier')) {
+      userBols = bols.filter(bol => bol.carrier.id === req.user.id);
+    } else if (req.user.roles.includes('shipper')) {
+      userBols = bols.filter(bol => bol.shipper.id === req.user.id);
+    }
+  }
+
+  const stats = {
+    total: userBols.length,
+    byStatus: {
+      pending: userBols.filter(b => b.status === 'pending').length,
+      approved: userBols.filter(b => b.status === 'approved').length,
+      assigned: userBols.filter(b => b.status === 'assigned').length,
+      accepted: userBols.filter(b => b.status === 'accepted').length,
+      picked_up: userBols.filter(b => b.status === 'picked_up').length,
+      en_route: userBols.filter(b => b.status === 'en_route').length,
+      delivered: userBols.filter(b => b.status === 'delivered').length,
+      unpaid: userBols.filter(b => b.status === 'unpaid').length,
+      paid: userBols.filter(b => b.status === 'paid').length,
+    },
+    totalValue: userBols.reduce((sum, bol) => sum + bol.totalValue, 0),
+    totalWeight: userBols.reduce((sum, bol) => sum + bol.totalWeight, 0)
+  };
+
+  res.json({
+    success: true,
+    data: stats
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Mock LoadBlock API server running on port ${PORT}`);
@@ -276,4 +750,13 @@ app.listen(PORT, () => {
   console.log('Test users:');
   console.log('- admin@loadblock.io / 12345678 (Admin)');
   console.log('- carrier@loadblock.io / 12345678 (Carrier)');
+  console.log('');
+  console.log('BoL API endpoints:');
+  console.log('- GET /api/v1/bol - List BoLs with filtering');
+  console.log('- GET /api/v1/bol/:id - Get specific BoL');
+  console.log('- POST /api/v1/bol - Create new BoL');
+  console.log('- PUT /api/v1/bol/:id - Update BoL');
+  console.log('- PATCH /api/v1/bol/:id/status - Update BoL status');
+  console.log('- DELETE /api/v1/bol/:id - Delete BoL');
+  console.log('- GET /api/v1/bol/stats - Get BoL statistics');
 });

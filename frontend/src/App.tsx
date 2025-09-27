@@ -8,6 +8,9 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import BoLListPage from './pages/BoLListPage'
+import CreateBoLPage from './pages/CreateBoLPage'
+import BoLDetailPage from './pages/BoLDetailPage'
 
 function App() {
   return (
@@ -40,6 +43,33 @@ function App() {
               element={
                 <ProtectedRoute requireAuth={true}>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/bol"
+              element={
+                <ProtectedRoute requireAuth={true}>
+                  <BoLListPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/bol/create"
+              element={
+                <ProtectedRoute requireAuth={true}>
+                  <CreateBoLPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/bol/:id"
+              element={
+                <ProtectedRoute requireAuth={true}>
+                  <BoLDetailPage />
                 </ProtectedRoute>
               }
             />
