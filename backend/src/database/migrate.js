@@ -174,7 +174,7 @@ class MigrationRunner {
       console.log('================');
 
       for (const filename of migrationFiles) {
-        const status = appliedMigrations[filename] ? '✅ Applied' : '❌ Pending';
+        const status = appliedMigrations[filename] ? '[APPLIED]' : '[PENDING]';
         const appliedAt = appliedMigrations[filename] ?
           ` (${new Date().toISOString()})` : '';
         console.log(`${status} ${filename}${appliedAt}`);

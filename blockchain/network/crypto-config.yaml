@@ -1,0 +1,36 @@
+# LoadBlock Cryptographic Configuration
+# This file defines the certificate structure for the Fabric network
+
+# Orderer Organizations
+OrdererOrgs:
+  - Name: Orderer
+    Domain: loadblock.com
+    EnableNodeOUs: false
+
+    # Define orderer specifications
+    Specs:
+      - Hostname: orderer
+        SANS:
+          - localhost
+
+# Peer Organizations
+PeerOrgs:
+  - Name: LoadBlock
+    Domain: loadblock.com
+    EnableNodeOUs: true
+
+    # Define the CA configuration
+    CA:
+        Hostname: ca
+        SANS:
+          - localhost
+
+    # Define peer specifications
+    Template:
+      Count: 2
+      SANS:
+        - localhost
+
+    # Additional users beyond Admin and User
+    Users:
+      Count: 3

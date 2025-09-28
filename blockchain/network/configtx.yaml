@@ -1,0 +1,157 @@
+# LoadBlock Hyperledger Fabric Network Configuration
+# This file defines the network topology and channel configuration
+
+# Define the organizations that will participate in the network
+Organizations:
+    # LoadBlock organization
+    - &LoadBlockOrg
+        Name: LoadBlockMSP
+        ID: LoadBlockMSP
+        MSPDir: ../crypto-config/peerOrganizations/loadblock.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('LoadBlockMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('LoadBlockMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('LoadBlockMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('LoadBlockMSP.peer')"
+
+        # Anchor peers for the organization
+        AnchorPeers:
+            - Host: peer0.loadblock.com
+              Port: 7051
+
+    # Orderer organization
+    - &OrdererOrg
+        Name: OrdererMSP
+        ID: OrdererMSP
+        MSPDir: ../crypto-config/ordererOrganizations/loadblock.com/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+
+# Define the application capabilities
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+    Orderer: &OrdererCapabilities
+        V2_0: true
+    Application: &ApplicationCapabilities
+        V2_0: true
+
+# Application configuration
+Application: &ApplicationDefaults
+    Organizations:
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+# Orderer configuration
+Orderer: &OrdererDefaults
+    OrdererType: etcdraft
+
+    # EtcdRaft configuration
+    EtcdRaft:
+        Consenters:
+        - Host: orderer.loadblock.com
+          Port: 7050
+          ClientTLSCert: ../crypto-config/ordererOrganizations/loadblock.com/orderers/orderer.loadblock.com/tls/server.crt
+          ServerTLSCert: ../crypto-config/ordererOrganizations/loadblock.com/orderers/orderer.loadblock.com/tls/server.crt
+
+    # Batch settings
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+
+    Organizations:
+
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+
+    Capabilities:
+        <<: *OrdererCapabilities
+
+# Channel configuration
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+
+    Capabilities:
+        <<: *ChannelCapabilities
+
+# Profiles define the different network configurations
+Profiles:
+    # LoadBlock Genesis Block Profile
+    LoadBlockOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            LoadBlockConsortium:
+                Organizations:
+                    - *LoadBlockOrg
+
+    # LoadBlock Channel Profile
+    LoadBlockChannel:
+        Consortium: LoadBlockConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *LoadBlockOrg
+            Capabilities:
+                <<: *ApplicationCapabilities
