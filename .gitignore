@@ -28,10 +28,14 @@ pids/
 # Coverage directory used by tools like istanbul
 coverage/
 
-# Blockchain artifacts
+# Blockchain artifacts and crypto material
+blockchain/crypto-config/
 blockchain/network/crypto-config/
 blockchain/network/channel-artifacts/
 blockchain/network/ledgers-backup/
+blockchain/config/
+blockchain/wallet/
+blockchain/ledgers-backup/
 
 # IPFS data
 ipfs/data/
@@ -64,10 +68,37 @@ infrastructure/aws/terraform/**/*.tfvars
 *.tgz
 *.tar.gz
 
-# Secrets and certificates
+# Secrets and certificates (all private keys and crypto material)
 *.key
 *.pem
 *.crt
+*.p12
+*.pfx
+*_sk
+*-key.pem
+*-cert.pem
+*.csr
+ca-key.pem
+ca-cert.pem
+server-key.pem
+server-cert.pem
+client-key.pem
+client-cert.pem
+tlsca.*-cert.pem
+tls/*
+msp/keystore/
+msp/signcerts/
+msp/cacerts/
+msp/tlscacerts/
+msp/intermediatecerts/
+msp/crls/
+msp/config.yaml
+Admin@*
+User*@*
+orderer*
+peer*
+ca.*
+tlsca.*
 !blockchain/network/crypto-config-template/
 
 # Archive folder
