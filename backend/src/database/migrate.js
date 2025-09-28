@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const fs = require('fs').promises;
 const path = require('path');
 const { query, testConnection } = require('../config/database');

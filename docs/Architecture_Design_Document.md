@@ -2,7 +2,7 @@
 
 **Project:** LoadBlock - Blockchain-Based Bill of Lading Management System
 **Version:** 1.0
-**Last Updated:** September 24, 2025
+**Last Updated:** September 28, 2025
 **Document Owner:** Architecture Team
 
 ---
@@ -143,6 +143,12 @@ LoadBlock addresses the trucking industry's reliance on paper-based documentatio
                               │ ┌─────────┐ ┌──────────────────┐  │
                               │ │  PDF    │ │ Blockchain       │  │
                               │ │ Service │ │ Service          │  │
+                              │ └─────────┘ └──────────────────┘  │
+                              │                                   │
+                              │ ┌─────────┐ ┌──────────────────┐  │
+                              │ │   AI    │ │  Data Collection │  │
+                              │ │ Service │ │   & Analytics    │  │
+                              │ │ (Stubs) │ │    Service       │  │
                               │ └─────────┘ └──────────────────┘  │
                               └──────────┬────────────┬───────────┘
                                          │            │

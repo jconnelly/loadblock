@@ -1,7 +1,7 @@
 # LoadBlock - Product Requirements Document (Living Document)
 
 **Version:** 1.0
-**Last Updated:** September 24, 2025
+**Last Updated:** September 28, 2025
 **Status:** Active Development
 
 ---
@@ -12,9 +12,9 @@ This is a **living document** that will be updated throughout the LoadBlock deve
 
 ## 1. Product Vision
 
-**Mission:** Eliminate paper-based inefficiencies in the trucking industry by providing a blockchain-based Bill of Lading management system with immutable audit trails and professional document generation.
+**Mission:** Eliminate paper-based inefficiencies in the trucking industry by providing a blockchain-based Bill of Lading management system with immutable audit trails, professional document generation, and AI-powered optimization capabilities.
 
-**Vision:** Become the industry standard for digital freight documentation, establishing LoadBlock as the trusted platform for carriers, shippers, brokers, and consignees.
+**Vision:** Become the industry standard for intelligent freight documentation, establishing LoadBlock as the trusted platform for carriers, shippers, brokers, and consignees, with AI-driven insights that transform logistics operations.
 
 ## 2. Executive Summary
 
@@ -24,6 +24,7 @@ LoadBlock is a comprehensive blockchain-based Bill of Lading (BoL) management pl
 - **Professional BoL Generation** with industry-standard formatting
 - **Multi-Role Access Control** supporting the entire freight ecosystem
 - **Real-Time Status Tracking** through a 9-stage workflow system
+- **AI-Ready Infrastructure** with data collection and API foundations for future intelligent features
 
 ## 3. Target Market
 
@@ -289,11 +290,45 @@ queryBoLsByStatus(status)
 
 ---
 
+## AI Integration Roadmap (Post-MVP)
+
+LoadBlock is architecturally prepared for AI-powered features through pre-built database schema and API infrastructure. The AI roadmap includes three major pillars:
+
+### Phase 1: Insta-Cash - Document Automation
+**Target:** 3-6 months post-MVP
+- **Intelligent Document Processing**: Camera-based OCR for BoL/POD scanning
+- **Geofenced POD Verification**: Location-verified proof of delivery
+- **Automated Factoring**: Direct API submission to factoring partners
+- **Value Proposition**: Collapse payment timeline from weeks to minutes
+
+### Phase 2: Profit-Pilot - AI Dispatcher
+**Target:** 6-9 months post-MVP
+- **Predictive Load Matching**: AI-recommended high-value loads
+- **Dynamic Route Optimization**: Real-time fuel/traffic/profit optimization
+- **Automated Backhaul Booking**: Smart return load suggestions
+- **Value Proposition**: Transform route planning into profit optimization
+
+### Phase 3: Factor-Flow - Risk & Trust Engine
+**Target:** 9-12 months post-MVP
+- **Carrier Performance Scoring**: Dynamic reliability metrics
+- **Fraud Detection**: AI-powered transaction anomaly detection
+- **Predictive Payment Analysis**: Days-to-pay forecasting for factors
+- **Value Proposition**: Data-driven risk management platform
+
+### Current AI Infrastructure Status ✅
+- **Database Schema**: Performance tracking, location data, payment history tables ready
+- **API Endpoints**: 10+ AI endpoint stubs implemented and documented
+- **Data Collection**: Starting immediately with MVP deployment
+- **Integration Points**: Clean separation allows post-MVP AI implementation
+
+---
+
 ## Change Log
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 1.0 | 2025-09-24 | Initial PRD creation with finalized architecture decisions | Development Team |
+| 1.1 | 2025-09-28 | Added AI integration roadmap and infrastructure foundation | Development Team |
 
 ---
 

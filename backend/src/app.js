@@ -19,6 +19,8 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const contactRoutes = require('./routes/contacts');
 const bolRoutes = require('./routes/bol');
+const pdfRoutes = require('./routes/pdf');
+const aiRoutes = require('./routes/ai');
 const adminRoutes = require('./routes/admin');
 
 /**
@@ -119,6 +121,8 @@ const createApp = () => {
   app.use('/api/v1/users', authMiddleware.authenticate, userRoutes);
   app.use('/api/v1/contacts', authMiddleware.authenticate, contactRoutes);
   app.use('/api/v1/bol', authMiddleware.authenticate, bolRoutes);
+  app.use('/api/v1/pdf', authMiddleware.authenticate, pdfRoutes);
+  app.use('/api/v1/ai', authMiddleware.authenticate, aiRoutes);
   app.use('/api/v1/admin', authMiddleware.authenticate, authMiddleware.requireRole(['admin']), adminRoutes);
 
   // API documentation endpoint
@@ -132,6 +136,8 @@ const createApp = () => {
         users: '/api/v1/users',
         contacts: '/api/v1/contacts',
         bol: '/api/v1/bol',
+        pdf: '/api/v1/pdf',
+        ai: '/api/v1/ai',
         admin: '/api/v1/admin'
       },
       documentation: '/api/docs'

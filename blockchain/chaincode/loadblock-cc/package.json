@@ -1,0 +1,63 @@
+{
+    "name": "loadblock-chaincode",
+    "version": "1.0.0",
+    "description": "LoadBlock Bill of Lading Smart Contract for Hyperledger Fabric",
+    "main": "src/loadblock-chaincode.js",
+    "scripts": {
+        "start": "fabric-chaincode-node start",
+        "test": "nyc mocha test --recursive",
+        "lint": "eslint ."
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "dependencies": {
+        "fabric-contract-api": "^2.5.4",
+        "fabric-shim": "^2.5.4"
+    },
+    "devDependencies": {
+        "fabric-network": "^2.5.4",
+        "mocha": "^10.0.0",
+        "nyc": "^15.1.0",
+        "sinon": "^14.0.0",
+        "sinon-chai": "^3.7.0",
+        "chai": "^4.3.6",
+        "eslint": "^8.0.0"
+    },
+    "keywords": [
+        "loadblock",
+        "bill-of-lading",
+        "hyperledger-fabric",
+        "blockchain",
+        "smart-contract",
+        "chaincode",
+        "trucking",
+        "logistics"
+    ],
+    "author": "LoadBlock Development Team",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/loadblock/loadblock.git"
+    },
+    "nyc": {
+        "exclude": [
+            "coverage/**",
+            "test/**"
+        ],
+        "reporter": [
+            "text-summary",
+            "html"
+        ],
+        "all": true,
+        "check-coverage": true,
+        "statements": 80,
+        "branches": 80,
+        "functions": 80,
+        "lines": 80
+    },
+    "fabric": {
+        "type": "node",
+        "entrypoint": "src/loadblock-chaincode.js"
+    }
+}

@@ -1,6 +1,6 @@
 # LoadBlock Hybrid Storage Architecture
 
-## 🎯 **Three-Layer Storage Strategy**
+## 🎯 **Four-Layer Storage Strategy**
 
 ### **Layer 1: PostgreSQL (Mutable Collaboration)**
 **Purpose**: Pending BoL storage and user management
@@ -52,6 +52,24 @@
 - PDF files ONLY
 - BoL documents (current and historical)
 - Future: Invoices, receipts, other docs
+
+### **Layer 4: AI Data Collection (Future Intelligence)**
+**Purpose**: Data collection for post-MVP AI features
+**Status**: ✅ Schema implemented, API stubs ready
+
+**Use Cases:**
+- Performance metrics tracking for AI scoring
+- Location data for route optimization
+- Payment patterns for risk analysis
+- Load history for AI recommendations
+- Document processing queue for future OCR
+
+**Data Types:**
+- Carrier performance metrics
+- GPS location history
+- Payment timing patterns
+- Load matching history
+- AI processing job queues
 
 ## 🔄 **Complete BoL Workflow**
 
@@ -176,4 +194,31 @@ History: Frontend ← Blockchain (audit trail) + IPFS (all versions)
 - ✅ History shows in frontend (basic format)
 - ✅ All three storage layers working together
 
-This hybrid architecture provides the perfect balance of performance, immutability, and user experience for the LoadBlock platform.
+## 🤖 **AI Infrastructure Integration (Added Week 6)**
+
+### **AI Data Collection Strategy**
+The AI layer operates transparently alongside the three-layer storage system:
+
+**Data Collection Points:**
+- **User Actions**: Every BoL operation logged for performance analysis
+- **Location Tracking**: GPS data from mobile carriers for route optimization
+- **Payment Patterns**: Transaction timing for risk assessment
+- **Performance Metrics**: On-time delivery, document quality scores
+
+**Zero-Impact Implementation:**
+- **Database Schema**: AI tables added without affecting core operations
+- **API Stubs**: Endpoints return mock data, no performance overhead
+- **Future-Ready**: Clean migration path for post-MVP AI features
+
+### **AI-Enabled Workflow Evolution**
+```
+Current: User → PostgreSQL → Blockchain → IPFS
+Future:  User → PostgreSQL → Blockchain → IPFS → AI Analysis → Insights
+```
+
+**Post-MVP AI Features:**
+1. **Profit-Pilot**: AI dispatcher with load recommendations
+2. **Insta-Cash**: Document OCR and automated factoring
+3. **Factor-Flow**: Risk scoring and fraud detection
+
+This hybrid architecture provides the perfect balance of performance, immutability, user experience, and future AI intelligence for the LoadBlock platform.

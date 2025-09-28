@@ -743,6 +743,106 @@ app.get('/api/v1/bol/stats', authenticate, (req, res) => {
   });
 });
 
+// PDF Generation endpoints
+
+// Generate PDF from BoL data
+app.post('/api/v1/pdf/generate', authenticate, (req, res) => {
+  console.log('PDF generation request:', req.body);
+
+  const { bolData } = req.body;
+
+  if (!bolData || !bolData.bolNumber) {
+    return res.status(400).json({
+      success: false,
+      error: 'Valid BoL data with BoL number is required'
+    });
+  }
+
+  // Mock PDF generation response
+  res.json({
+    success: true,
+    message: 'PDF generation would be implemented with real PDF service',
+    data: {
+      bolNumber: bolData.bolNumber,
+      filename: `BOL_${bolData.bolNumber}_${Date.now()}.pdf`,
+      mockUrl: `/api/v1/pdf/download/${bolData.bolNumber}`
+    }
+  });
+});
+
+// Preview PDF endpoint
+app.post('/api/v1/pdf/preview', authenticate, (req, res) => {
+  console.log('PDF preview request:', req.body);
+
+  const { bolData } = req.body;
+
+  if (!bolData || !bolData.bolNumber) {
+    return res.status(400).json({
+      success: false,
+      error: 'Valid BoL data with BoL number is required'
+    });
+  }
+
+  // Mock PDF preview response
+  res.json({
+    success: true,
+    message: 'PDF preview would be generated with real PDF service',
+    data: {
+      bolNumber: bolData.bolNumber,
+      previewUrl: `/api/v1/pdf/preview/${bolData.bolNumber}`
+    }
+  });
+});
+
+// Get PDF from database BoL
+app.get('/api/v1/pdf/bol/:bolNumber', authenticate, (req, res) => {
+  const { bolNumber } = req.params;
+  console.log('Database BoL PDF request:', bolNumber);
+
+  const bol = bols.find(b => b.bolNumber === bolNumber);
+
+  if (!bol) {
+    return res.status(404).json({
+      success: false,
+      error: 'BoL not found'
+    });
+  }
+
+  // Mock PDF generation from database BoL
+  res.json({
+    success: true,
+    message: 'PDF would be generated from database BoL',
+    data: {
+      bolNumber: bol.bolNumber,
+      filename: `BOL_${bol.bolNumber}_${Date.now()}.pdf`,
+      bol: bol
+    }
+  });
+});
+
+// Admin cleanup endpoint
+app.post('/api/v1/pdf/cleanup', authenticate, (req, res) => {
+  console.log('PDF cleanup request by user:', req.user.email);
+
+  if (!req.user.roles.includes('admin')) {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required'
+    });
+  }
+
+  const maxAge = req.query.maxAge || 24;
+
+  res.json({
+    success: true,
+    message: `Mock cleanup of files older than ${maxAge} hours completed`,
+    data: {
+      filesDeleted: 0,
+      maxAgeHours: maxAge
+    }
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Mock LoadBlock API server running on port ${PORT}`);
@@ -759,4 +859,10 @@ app.listen(PORT, () => {
   console.log('- PATCH /api/v1/bol/:id/status - Update BoL status');
   console.log('- DELETE /api/v1/bol/:id - Delete BoL');
   console.log('- GET /api/v1/bol/stats - Get BoL statistics');
+  console.log('');
+  console.log('PDF API endpoints:');
+  console.log('- POST /api/v1/pdf/generate - Generate PDF from BoL data');
+  console.log('- POST /api/v1/pdf/preview - Preview PDF from BoL data');
+  console.log('- GET /api/v1/pdf/bol/:bolNumber - Generate PDF from database BoL');
+  console.log('- POST /api/v1/pdf/cleanup - Admin cleanup of temp files');
 });

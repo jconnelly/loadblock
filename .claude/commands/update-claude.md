@@ -63,4 +63,4 @@ Suggest updates for:
 - docs/project_plan.md (current phase status)
 - TODO.md (next phase priorities)
 - Any other documentation that needs synchronization, like the docs/Architecture_Design_Document.md
-- Git (git add and commit any new or changed files) then Push the changes up
+- Git add and commit any new or changed files then git Push the changes up
