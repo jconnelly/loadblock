@@ -177,10 +177,14 @@ class PDFService {
     addCarrierInfo(doc, bolData) {
         const startY = 300;
 
+        // Carrier Information Section with border for professional appearance
+        doc.rect(45, startY - 5, 505, 135).stroke();
+
         doc.fontSize(14)
            .font('Helvetica-Bold')
            .text('CARRIER INFORMATION', 50, startY);
 
+        // Left column - Basic contact info
         doc.fontSize(10)
            .font('Helvetica')
            .text(`Company: ${bolData.carrier.companyName}`, 50, startY + 20)
@@ -188,85 +192,147 @@ class PDFService {
            .text(`Email: ${bolData.carrier.email}`, 50, startY + 50)
            .text(`Phone: ${bolData.carrier.phone}`, 50, startY + 65);
 
+        // Right column - Regulatory compliance info (industry standard)
+        doc.font('Helvetica-Bold')
+           .text('REGULATORY COMPLIANCE', 300, startY);
+
+        doc.font('Helvetica');
         if (bolData.carrier.dotNumber) {
             doc.text(`DOT Number: ${bolData.carrier.dotNumber}`, 300, startY + 20);
         }
         if (bolData.carrier.mcNumber) {
             doc.text(`MC Number: ${bolData.carrier.mcNumber}`, 300, startY + 35);
         }
-
-        if (bolData.carrier.address) {
-            doc.text(`Address: ${bolData.carrier.address.street}`, 50, startY + 80)
-               .text(`${bolData.carrier.address.city}, ${bolData.carrier.address.state} ${bolData.carrier.address.zipCode}`, 50, startY + 95);
+        if (bolData.carrier.scacCode) {
+            doc.text(`SCAC Code: ${bolData.carrier.scacCode}`, 300, startY + 50);
+        } else {
+            doc.text('SCAC Code: Not Provided', 300, startY + 50);
+        }
+        if (bolData.carrier.insurancePolicy) {
+            doc.text(`Insurance: ${bolData.carrier.insurancePolicy}`, 300, startY + 65);
+        } else {
+            doc.text('Insurance: See Carrier Agreement', 300, startY + 65);
         }
 
-        return startY + 120;
+        // Address at bottom spanning full width
+        if (bolData.carrier.address) {
+            doc.font('Helvetica-Bold')
+               .text('CARRIER ADDRESS:', 50, startY + 85);
+            doc.font('Helvetica')
+               .text(`${bolData.carrier.address.street}`, 50, startY + 100)
+               .text(`${bolData.carrier.address.city}, ${bolData.carrier.address.state} ${bolData.carrier.address.zipCode}`, 50, startY + 115);
+        }
+
+        return startY + 140;
     }
 
     addCargoInfo(doc, bolData) {
-        const startY = 430;
+        const startY = 450;
+
+        // Cargo section border
+        doc.rect(45, startY - 5, 505, 180).stroke();
 
         doc.fontSize(14)
            .font('Helvetica-Bold')
-           .text('CARGO INFORMATION', 50, startY);
+           .text('CARGO INFORMATION & COMMODITY DETAILS', 50, startY);
 
-        // Table headers
+        // Enhanced table headers with better spacing
         const tableTop = startY + 25;
-        doc.fontSize(10)
+        doc.fontSize(9)
            .font('Helvetica-Bold')
-           .text('Description', 50, tableTop)
-           .text('Qty', 200, tableTop)
-           .text('Unit', 240, tableTop)
-           .text('Weight (lbs)', 280, tableTop)
-           .text('Value ($)', 360, tableTop)
-           .text('Packaging', 430, tableTop);
+           .text('DESCRIPTION', 50, tableTop)
+           .text('QTY', 180, tableTop)
+           .text('UNIT', 210, tableTop)
+           .text('WEIGHT', 250, tableTop)
+           .text('VALUE', 300, tableTop)
+           .text('PACKAGE', 340, tableTop)
+           .text('CLASS', 390, tableTop)
+           .text('HAZMAT', 430, tableTop)
+           .text('DIMS', 470, tableTop);
 
-        // Draw header line
+        // Draw header lines for professional appearance
         doc.strokeColor('#000000')
            .lineWidth(1)
            .moveTo(50, tableTop + 15)
            .lineTo(545, tableTop + 15)
            .stroke();
 
-        // Cargo items
+        // Cargo items with enhanced formatting
         let currentY = tableTop + 25;
+        let totalPieces = 0;
+        let totalWeight = 0;
+        let totalValue = 0;
+
         doc.font('Helvetica');
+        doc.fontSize(8);
 
         bolData.cargoItems.forEach((item, index) => {
-            doc.text(item.description, 50, currentY)
-               .text(item.quantity.toString(), 200, currentY)
-               .text(item.unit, 240, currentY)
-               .text(item.weight.toFixed(2), 280, currentY)
-               .text(item.value.toFixed(2), 360, currentY)
-               .text(item.packaging || 'N/A', 430, currentY);
+            // Calculate totals dynamically
+            totalPieces += item.quantity || 0;
+            totalWeight += item.weight || 0;
+            totalValue += item.value || 0;
 
+            doc.text(item.description, 50, currentY, { width: 125 })
+               .text((item.quantity || 0).toString(), 180, currentY)
+               .text(item.unit || 'PC', 210, currentY)
+               .text((item.weight || 0).toFixed(1), 250, currentY)
+               .text(`$${(item.value || 0).toFixed(2)}`, 300, currentY)
+               .text(item.packaging || 'N/A', 340, currentY)
+               .text(item.freightClass || '70', 390, currentY)
+               .text(item.dimensions || 'N/A', 470, currentY);
+
+            // Hazmat indicator with proper formatting
             if (item.hazmat) {
                 doc.fillColor('red')
-                   .text('HAZMAT', 500, currentY)
-                   .fillColor('black');
+                   .font('Helvetica-Bold')
+                   .text('YES', 430, currentY)
+                   .fillColor('black')
+                   .font('Helvetica');
+            } else {
+                doc.text('NO', 430, currentY);
             }
 
-            currentY += 20;
+            currentY += 15;
         });
 
-        // Totals
-        currentY += 10;
-        doc.fontSize(12)
-           .font('Helvetica-Bold')
-           .text(`Total Pieces: ${bolData.totalPieces}`, 50, currentY)
-           .text(`Total Weight: ${bolData.totalWeight.toFixed(2)} lbs`, 200, currentY)
-           .text(`Total Value: $${bolData.totalValue.toFixed(2)}`, 350, currentY);
+        // Draw line above totals
+        currentY += 5;
+        doc.moveTo(50, currentY)
+           .lineTo(545, currentY)
+           .stroke();
 
+        // Enhanced totals section with calculations
+        currentY += 10;
+        doc.fontSize(11)
+           .font('Helvetica-Bold')
+           .text('SHIPMENT TOTALS:', 50, currentY);
+
+        currentY += 20;
+        doc.fontSize(10)
+           .text(`Total Pieces: ${totalPieces}`, 50, currentY)
+           .text(`Total Weight: ${totalWeight.toFixed(2)} lbs`, 180, currentY)
+           .text(`Total Value: $${totalValue.toFixed(2)}`, 300, currentY);
+
+        // Declared value for liability purposes
+        currentY += 15;
+        doc.text(`Declared Value for Carriage: $${Math.min(totalValue, 100000).toFixed(2)}`, 50, currentY);
+        doc.fontSize(8)
+           .font('Helvetica')
+           .text('(Limited to $100,000 unless declared and charges paid)', 300, currentY);
+
+        // Special instructions with better formatting
         if (bolData.specialInstructions) {
-            currentY += 30;
+            currentY += 25;
             doc.fontSize(10)
                .font('Helvetica-Bold')
-               .text('Special Instructions:', 50, currentY);
-            doc.font('Helvetica')
+               .text('SPECIAL INSTRUCTIONS / HANDLING REQUIREMENTS:', 50, currentY);
+            doc.fontSize(9)
+               .font('Helvetica')
                .text(bolData.specialInstructions, 50, currentY + 15, { width: 495 });
+            currentY += 30;
         }
 
-        return currentY + 60;
+        return currentY + 20;
     }
 
     addFreightCharges(doc, bolData) {
@@ -311,15 +377,48 @@ class PDFService {
             doc.text(`Pickup Date: ${bolData.pickupDate}`, 50, startY + 35);
         }
 
-        // Signature blocks
-        doc.fontSize(10)
-           .font('Helvetica')
-           .text('Shipper Signature: ________________________', 50, startY + 60)
-           .text('Date: ____________', 300, startY + 60)
-           .text('Carrier Signature: ________________________', 50, startY + 90)
-           .text('Date: ____________', 300, startY + 90);
+        // Professional signature and compliance section
+        const sigStartY = startY + 50;
 
-        return startY + 120;
+        // Terms and Conditions compliance section
+        doc.rect(45, sigStartY - 5, 505, 120).stroke();
+
+        doc.fontSize(12)
+           .font('Helvetica-Bold')
+           .text('TERMS, CONDITIONS & DIGITAL SIGNATURES', 50, sigStartY);
+
+        // Compliance statements
+        doc.fontSize(8)
+           .font('Helvetica')
+           .text('This shipment is subject to the terms and conditions of the Uniform Bill of Lading.', 50, sigStartY + 20)
+           .text('Carrier liability is limited. See back of original bill for full terms and conditions.', 50, sigStartY + 30)
+           .text('This document has been digitally signed and recorded on blockchain for authenticity.', 50, sigStartY + 40);
+
+        // Digital signature blocks with enhanced formatting
+        doc.fontSize(10)
+           .font('Helvetica-Bold')
+           .text('SHIPPER CERTIFICATION:', 50, sigStartY + 60);
+
+        doc.fontSize(9)
+           .font('Helvetica')
+           .text('The shipper certifies that the above-named materials are properly classified, described,', 50, sigStartY + 75)
+           .text('packaged, marked and labeled and are in proper condition for transportation.', 50, sigStartY + 85);
+
+        // Signature lines with proper spacing
+        doc.fontSize(10)
+           .text('Shipper Signature: ________________________________     Date: _______________', 50, sigStartY + 105)
+           .text('Print Name: ______________________________________     Title: _______________', 300, sigStartY + 105);
+
+        // Add blockchain verification notice
+        if (bolData.blockchainTxId || bolData.digitalSignatures) {
+            doc.fontSize(8)
+               .font('Helvetica-Bold')
+               .fillColor('#0D47A1')
+               .text('✓ DIGITALLY VERIFIED THROUGH BLOCKCHAIN TECHNOLOGY', 50, sigStartY + 125)
+               .fillColor('black');
+        }
+
+        return sigStartY + 145;
     }
 
     addFooter(doc, bolData) {

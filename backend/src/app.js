@@ -11,7 +11,7 @@ const { testConnection } = require('./config/database');
 
 // Import middleware
 const authMiddleware = require('./middleware/auth');
-const errorHandler = require('./middleware/errorHandler');
+const { errorHandler } = require('./middleware/errorHandler');
 const validation = require('./middleware/validation');
 
 // Import routes

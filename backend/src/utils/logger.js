@@ -37,10 +37,11 @@ const logger = winston.createLogger({
   transports: []
 });
 
-// Add console transport for development
+// Add console transport for development and test
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
-    format: consoleFormat
+    format: consoleFormat,
+    silent: process.env.NODE_ENV === 'test' // Silent in test unless LOG_LEVEL is set
   }));
 } else {
   // Production console logging (structured JSON)

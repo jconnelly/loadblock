@@ -300,9 +300,11 @@ const permissions = {
 module.exports = {
   authenticate,
   requireRole,
+  requireRoles: requireRole, // Alias for consistency with routes
   requirePermission,
   optionalAuth,
   getEffectiveRole,
   permissions,
-  extractToken
+  extractToken,
+  verifyToken: authenticate // Legacy alias
 };
