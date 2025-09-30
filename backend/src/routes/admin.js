@@ -1,5 +1,13 @@
 const express = require('express');
-const { requireRole } = require('../middleware/auth');
+const {
+  requireRole,
+  requirePermission,
+  requireAnyPermission,
+  requireAllPermissions,
+  requireOwnershipOrAdmin,
+  permissions
+} = require('../middleware/auth');
+const { PERMISSIONS } = require('../services/rbacService');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 const router = express.Router();
@@ -7,9 +15,10 @@ const router = express.Router();
 /**
  * @route   GET /api/v1/admin/users
  * @desc    Get all users (admin only)
- * @access  Private - Admin only
+ * @access  Private - Requires user:read and admin:system permissions
  */
 router.get('/users',
+  requireAllPermissions([PERMISSIONS.USER_READ, PERMISSIONS.ADMIN_SYSTEM]),
   asyncHandler(async (req, res) => {
     // Placeholder for user management
     res.json({
@@ -29,9 +38,10 @@ router.get('/users',
 /**
  * @route   GET /api/v1/admin/system-status
  * @desc    Get system status and metrics
- * @access  Private - Admin only
+ * @access  Private - Requires admin:system permission
  */
 router.get('/system-status',
+  requirePermission(PERMISSIONS.ADMIN_SYSTEM),
   asyncHandler(async (req, res) => {
     // Basic system status
     res.json({

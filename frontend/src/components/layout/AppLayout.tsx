@@ -33,6 +33,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { UserRole } from '../../types';
+// import NotificationBell from '../notifications/NotificationBell';
 
 const DRAWER_WIDTH = 240;
 
@@ -185,6 +186,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
               {user?.firstName} {user?.lastName}
             </Typography>
+            {/* <NotificationBell /> */}
             <IconButton
               size="large"
               aria-label="account of current user"

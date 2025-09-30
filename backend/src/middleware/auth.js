@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const { RBACService } = require('../services/rbacService');
 const logger = require('../utils/logger');
 
 /**
@@ -162,7 +163,7 @@ const requireRole = (requiredRoles, requireAll = false) => {
  * @param {Function} permissionCheck - Function to check permission (req, res) => boolean
  * @returns {Function} Middleware function
  */
-const requirePermission = (permissionCheck) => {
+const requirePermissionCheck = (permissionCheck) => {
   return async (req, res, next) => {
     try {
       const hasPermission = await permissionCheck(req, res);
@@ -250,19 +251,302 @@ const optionalAuth = async (req, res, next) => {
  * @returns {string} Effective role
  */
 const getEffectiveRole = (roles) => {
-  const roleHierarchy = ['admin', 'carrier', 'broker', 'shipper', 'consignee'];
-
-  for (const role of roleHierarchy) {
-    if (roles.includes(role)) {
-      return role;
-    }
-  }
-
-  return 'consignee'; // Default fallback
+  return RBACService.getEffectiveRole({ roles });
 };
 
 /**
- * Common permission checks for reuse
+ * Middleware to check if user has specific permission
+ * @param {string} permission - Required permission
+ * @returns {Function} Middleware function
+ */
+const requirePermission = (permission) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Authentication required',
+          code: 'AUTHENTICATION_REQUIRED'
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id
+        }
+      });
+    }
+
+    const hasPermission = RBACService.hasPermission(req.user, permission);
+
+    if (!hasPermission) {
+      logger.warn('Permission denied', {
+        userId: req.user.id,
+        userRoles: req.user.roles,
+        requiredPermission: permission,
+        requestId: req.id
+      });
+
+      return res.status(403).json({
+        success: false,
+        error: {
+          message: 'Insufficient permissions',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          details: {
+            requiredPermission: permission,
+            userRoles: req.user.roles
+          }
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id
+        }
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Middleware to check if user has any of the specified permissions
+ * @param {Array<string>} permissions - Array of permissions (user needs ANY one)
+ * @returns {Function} Middleware function
+ */
+const requireAnyPermission = (permissions) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Authentication required',
+          code: 'AUTHENTICATION_REQUIRED'
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id
+        }
+      });
+    }
+
+    const hasAnyPermission = RBACService.hasAnyPermission(req.user, permissions);
+
+    if (!hasAnyPermission) {
+      logger.warn('Permission denied - insufficient permissions', {
+        userId: req.user.id,
+        userRoles: req.user.roles,
+        requiredPermissions: permissions,
+        requestId: req.id
+      });
+
+      return res.status(403).json({
+        success: false,
+        error: {
+          message: 'Insufficient permissions',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          details: {
+            requiredPermissions: permissions,
+            userRoles: req.user.roles,
+            note: 'User needs at least one of the required permissions'
+          }
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id
+        }
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Middleware to check if user has all specified permissions
+ * @param {Array<string>} permissions - Array of permissions (user needs ALL)
+ * @returns {Function} Middleware function
+ */
+const requireAllPermissions = (permissions) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Authentication required',
+          code: 'AUTHENTICATION_REQUIRED'
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id
+        }
+      });
+    }
+
+    const hasAllPermissions = RBACService.hasAllPermissions(req.user, permissions);
+
+    if (!hasAllPermissions) {
+      logger.warn('Permission denied - missing required permissions', {
+        userId: req.user.id,
+        userRoles: req.user.roles,
+        requiredPermissions: permissions,
+        requestId: req.id
+      });
+
+      return res.status(403).json({
+        success: false,
+        error: {
+          message: 'Insufficient permissions',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          details: {
+            requiredPermissions: permissions,
+            userRoles: req.user.roles,
+            note: 'User needs all of the required permissions'
+          }
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.id
+        }
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Middleware to check BoL status transition permissions
+ * @param {Function} getStatusData - Function to extract current and target status from request
+ * @returns {Function} Middleware function
+ */
+const requireStatusTransition = (getStatusData) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Authentication required',
+          code: 'AUTHENTICATION_REQUIRED'
+        }
+      });
+    }
+
+    try {
+      const { fromStatus, toStatus } = getStatusData(req);
+      const result = RBACService.canTransitionStatus(req.user, fromStatus, toStatus);
+
+      if (!result.allowed) {
+        logger.warn('Status transition denied', {
+          userId: req.user.id,
+          userRoles: req.user.roles,
+          fromStatus,
+          toStatus,
+          reason: result.reason,
+          requestId: req.id
+        });
+
+        return res.status(403).json({
+          success: false,
+          error: {
+            message: 'Status transition not allowed',
+            code: 'TRANSITION_NOT_ALLOWED',
+            details: {
+              fromStatus,
+              toStatus,
+              reason: result.reason
+            }
+          },
+          meta: {
+            timestamp: new Date().toISOString(),
+            requestId: req.id
+          }
+        });
+      }
+
+      next();
+
+    } catch (error) {
+      logger.error('Status transition check failed', error, {
+        userId: req.user?.id,
+        requestId: req.id
+      });
+
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Status transition check failed',
+          code: 'TRANSITION_CHECK_ERROR'
+        }
+      });
+    }
+  };
+};
+
+/**
+ * Middleware for resource ownership validation
+ * @param {Function} getResourceOwner - Function to get resource owner ID from request
+ * @returns {Function} Middleware function
+ */
+const requireOwnershipOrAdmin = (getResourceOwner) => {
+  return async (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Authentication required',
+          code: 'AUTHENTICATION_REQUIRED'
+        }
+      });
+    }
+
+    try {
+      // Admin can access everything
+      if (req.user.roles.includes('admin')) {
+        return next();
+      }
+
+      const resourceOwnerId = await getResourceOwner(req);
+
+      if (req.user.id !== resourceOwnerId) {
+        logger.warn('Resource access denied - not owner', {
+          userId: req.user.id,
+          resourceOwnerId,
+          resource: req.originalUrl,
+          requestId: req.id
+        });
+
+        return res.status(403).json({
+          success: false,
+          error: {
+            message: 'Access denied - you can only access your own resources',
+            code: 'OWNERSHIP_REQUIRED'
+          },
+          meta: {
+            timestamp: new Date().toISOString(),
+            requestId: req.id
+          }
+        });
+      }
+
+      next();
+
+    } catch (error) {
+      logger.error('Ownership check failed', error, {
+        userId: req.user?.id,
+        requestId: req.id
+      });
+
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Ownership check failed',
+          code: 'OWNERSHIP_CHECK_ERROR'
+        }
+      });
+    }
+  };
+};
+
+/**
+ * Enhanced permission checks for BoL workflow management
  */
 const permissions = {
   /**
@@ -274,7 +558,7 @@ const permissions = {
   },
 
   /**
-   * Check if user can update BoL status
+   * Check if user can update BoL status (enhanced for workflow)
    */
   canUpdateBoLStatus: (req) => {
     const userRoles = req.user?.roles || [];
@@ -294,6 +578,67 @@ const permissions = {
    */
   ownsResourceOrAdmin: (resourceUserId) => (req) => {
     return req.user?.roles?.includes('admin') || req.user?.id === resourceUserId;
+  },
+
+  /**
+   * Workflow-specific permission checks
+   */
+  workflow: {
+    /**
+     * Check if user can approve BoL (shipper/admin only)
+     */
+    canApprove: (req) => {
+      const userRoles = req.user?.roles || [];
+      return userRoles.some(role => ['admin', 'shipper'].includes(role));
+    },
+
+    /**
+     * Check if user can assign carrier (broker/admin only)
+     */
+    canAssignCarrier: (req) => {
+      const userRoles = req.user?.roles || [];
+      return userRoles.some(role => ['admin', 'broker'].includes(role));
+    },
+
+    /**
+     * Check if user can accept/reject assignment (carrier/admin only)
+     */
+    canAcceptReject: (req) => {
+      const userRoles = req.user?.roles || [];
+      return userRoles.some(role => ['admin', 'carrier'].includes(role));
+    },
+
+    /**
+     * Check if user can update transit status (carrier/admin only)
+     */
+    canUpdateTransit: (req) => {
+      const userRoles = req.user?.roles || [];
+      return userRoles.some(role => ['admin', 'carrier'].includes(role));
+    },
+
+    /**
+     * Check if user can confirm delivery (carrier/consignee/admin)
+     */
+    canConfirmDelivery: (req) => {
+      const userRoles = req.user?.roles || [];
+      return userRoles.some(role => ['admin', 'carrier', 'consignee'].includes(role));
+    },
+
+    /**
+     * Check if user can process payment (admin/carrier/broker only)
+     */
+    canProcessPayment: (req) => {
+      const userRoles = req.user?.roles || [];
+      return userRoles.some(role => ['admin', 'carrier', 'broker'].includes(role));
+    },
+
+    /**
+     * Check if user can cancel shipment (admin/shipper/carrier)
+     */
+    canCancel: (req) => {
+      const userRoles = req.user?.roles || [];
+      return userRoles.some(role => ['admin', 'shipper', 'carrier'].includes(role));
+    }
   }
 };
 
@@ -302,6 +647,11 @@ module.exports = {
   requireRole,
   requireRoles: requireRole, // Alias for consistency with routes
   requirePermission,
+  requirePermissionCheck,
+  requireAnyPermission,
+  requireAllPermissions,
+  requireStatusTransition,
+  requireOwnershipOrAdmin,
   optionalAuth,
   getEffectiveRole,
   permissions,

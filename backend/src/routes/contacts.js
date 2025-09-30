@@ -1,5 +1,13 @@
 const express = require('express');
-const { requireRole } = require('../middleware/auth');
+const {
+  requireRole,
+  requirePermission,
+  requireAnyPermission,
+  requireAllPermissions,
+  requireOwnershipOrAdmin,
+  permissions
+} = require('../middleware/auth');
+const { PERMISSIONS } = require('../services/rbacService');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 const router = express.Router();
@@ -7,9 +15,10 @@ const router = express.Router();
 /**
  * @route   GET /api/v1/contacts
  * @desc    Get user's contacts
- * @access  Private
+ * @access  Private - Requires contact:read permission
  */
 router.get('/',
+  requirePermission(PERMISSIONS.CONTACT_READ),
   asyncHandler(async (req, res) => {
     // Placeholder for contacts listing
     res.json({
@@ -29,9 +38,10 @@ router.get('/',
 /**
  * @route   POST /api/v1/contacts
  * @desc    Create new contact
- * @access  Private
+ * @access  Private - Requires contact:create permission
  */
 router.post('/',
+  requirePermission(PERMISSIONS.CONTACT_CREATE),
   asyncHandler(async (req, res) => {
     // Placeholder for contact creation
     res.json({

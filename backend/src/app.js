@@ -22,6 +22,7 @@ const bolRoutes = require('./routes/bol');
 const pdfRoutes = require('./routes/pdf');
 const aiRoutes = require('./routes/ai');
 const adminRoutes = require('./routes/admin');
+const performanceRoutes = require('./routes/performance');
 
 /**
  * Create and configure Express application
@@ -124,6 +125,7 @@ const createApp = () => {
   app.use('/api/v1/pdf', authMiddleware.authenticate, pdfRoutes);
   app.use('/api/v1/ai', authMiddleware.authenticate, aiRoutes);
   app.use('/api/v1/admin', authMiddleware.authenticate, authMiddleware.requireRole(['admin']), adminRoutes);
+  app.use('/api/v1/performance', authMiddleware.authenticate, performanceRoutes);
 
   // API documentation endpoint
   app.get('/api/v1', (req, res) => {
@@ -138,7 +140,8 @@ const createApp = () => {
         bol: '/api/v1/bol',
         pdf: '/api/v1/pdf',
         ai: '/api/v1/ai',
-        admin: '/api/v1/admin'
+        admin: '/api/v1/admin',
+        performance: '/api/v1/performance'
       },
       documentation: '/api/docs'
     });

@@ -1,5 +1,13 @@
 const express = require('express');
-const { requireRole, permissions } = require('../middleware/auth');
+const {
+  requireRole,
+  requirePermission,
+  requireAnyPermission,
+  requireAllPermissions,
+  requireOwnershipOrAdmin,
+  permissions
+} = require('../middleware/auth');
+const { PERMISSIONS } = require('../services/rbacService');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 const router = express.Router();
@@ -7,9 +15,10 @@ const router = express.Router();
 /**
  * @route   GET /api/v1/users/profile
  * @desc    Get user profile
- * @access  Private
+ * @access  Private - Requires user:read permission
  */
 router.get('/profile',
+  requirePermission(PERMISSIONS.USER_READ),
   asyncHandler(async (req, res) => {
     // Return current user profile
     res.json({
@@ -38,9 +47,10 @@ router.get('/profile',
 /**
  * @route   PUT /api/v1/users/profile
  * @desc    Update user profile
- * @access  Private
+ * @access  Private - Requires user:update permission
  */
 router.put('/profile',
+  requirePermission(PERMISSIONS.USER_UPDATE),
   asyncHandler(async (req, res) => {
     // Placeholder for profile update functionality
     res.json({

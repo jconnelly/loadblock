@@ -11,7 +11,7 @@ const JWT_SECRET = 'mock-jwt-secret-for-testing';
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:3003', 'http://localhost:3004'],
   credentials: true
 }));
 
@@ -35,6 +35,39 @@ const users = [
     firstName: 'John',
     lastName: 'Carrier',
     roles: ['carrier'],
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    email: 'shipper@loadblock.io',
+    password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/VjPoyh.VS', // 12345678
+    firstName: 'Sarah',
+    lastName: 'Shipper',
+    roles: ['shipper'],
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '4',
+    email: 'broker@loadblock.io',
+    password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/VjPoyh.VS', // 12345678
+    firstName: 'Bob',
+    lastName: 'Broker',
+    roles: ['broker'],
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '5',
+    email: 'consignee@loadblock.io',
+    password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/VjPoyh.VS', // 12345678
+    firstName: 'Carol',
+    lastName: 'Consignee',
+    roles: ['consignee'],
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -843,6 +876,272 @@ app.post('/api/v1/pdf/cleanup', authenticate, (req, res) => {
   });
 });
 
+// Notification System Routes
+// Mock notification database
+const notifications = [
+  {
+    id: '1',
+    userId: '2', // Carrier user
+    type: 'bol_created',
+    title: 'New BoL Assignment',
+    message: 'New BoL #BOL-2025-000123 assigned from Acme Shipping',
+    relatedBoLId: 'bol_123',
+    relatedBoLNumber: 'BOL-2025-000123',
+    priority: 'high',
+    isRead: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
+    createdBy: {
+      id: '3',
+      name: 'Sarah Shipper',
+      email: 'shipper@loadblock.io',
+      role: 'shipper'
+    }
+  },
+  {
+    id: '2',
+    userId: '3', // Shipper user
+    type: 'bol_rejected',
+    title: 'BoL Rejected',
+    message: 'BoL #BOL-2025-000124 rejected by FastTrack Cargo: Missing unit weight for cargo item 2',
+    relatedBoLId: 'bol_124',
+    relatedBoLNumber: 'BOL-2025-000124',
+    priority: 'high',
+    isRead: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+    createdBy: {
+      id: '2',
+      name: 'John Carrier',
+      email: 'carrier@loadblock.io',
+      role: 'carrier'
+    },
+    metadata: { rejectionReason: 'Missing unit weight for cargo item 2' }
+  },
+  {
+    id: '3',
+    userId: '3', // Shipper user
+    type: 'status_updated',
+    title: 'BoL Status Updated',
+    message: 'BoL #BOL-2025-000125 status changed from pending to approved',
+    relatedBoLId: 'bol_125',
+    relatedBoLNumber: 'BOL-2025-000125',
+    priority: 'medium',
+    isRead: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    createdBy: {
+      id: '2',
+      name: 'John Carrier',
+      email: 'carrier@loadblock.io',
+      role: 'carrier'
+    }
+  },
+  {
+    id: '4',
+    userId: '1', // Admin user
+    type: 'system_message',
+    title: 'System Update',
+    message: 'LoadBlock notification system is now active',
+    priority: 'low',
+    isRead: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  }
+];
+
+// Get notifications for authenticated user
+app.get('/api/v1/notifications', authenticate, (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const unreadOnly = req.query.unreadOnly === 'true';
+  const type = req.query.type;
+  const since = req.query.since;
+
+  console.log('Get notifications request:', { userId: req.user.id, page, limit, unreadOnly, type, since });
+
+  // Filter notifications for current user
+  let userNotifications = notifications.filter(n => n.userId === req.user.id);
+
+  // Apply filters
+  if (unreadOnly) {
+    userNotifications = userNotifications.filter(n => !n.isRead);
+  }
+
+  if (type) {
+    userNotifications = userNotifications.filter(n => n.type === type);
+  }
+
+  if (since) {
+    const sinceDate = new Date(since);
+    userNotifications = userNotifications.filter(n => new Date(n.createdAt) > sinceDate);
+  }
+
+  // Sort by created date (newest first)
+  userNotifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  // Pagination
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedNotifications = userNotifications.slice(startIndex, endIndex);
+
+  const totalCount = userNotifications.length;
+  const unreadCount = notifications.filter(n => n.userId === req.user.id && !n.isRead).length;
+
+  res.json({
+    success: true,
+    notifications: paginatedNotifications,
+    totalCount,
+    unreadCount,
+    pagination: {
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit)
+    }
+  });
+});
+
+// Get notification statistics
+app.get('/api/v1/notifications/stats', authenticate, (req, res) => {
+  const userNotifications = notifications.filter(n => n.userId === req.user.id);
+  const unreadNotifications = userNotifications.filter(n => !n.isRead);
+
+  const byType = {};
+  const byPriority = {};
+
+  userNotifications.forEach(n => {
+    byType[n.type] = (byType[n.type] || 0) + 1;
+    byPriority[n.priority] = (byPriority[n.priority] || 0) + 1;
+  });
+
+  res.json({
+    success: true,
+    stats: {
+      total: userNotifications.length,
+      unread: unreadNotifications.length,
+      byType,
+      byPriority
+    }
+  });
+});
+
+// Mark notifications as read
+app.post('/api/v1/notifications/mark-read', authenticate, (req, res) => {
+  const { notificationIds } = req.body;
+
+  console.log('Mark as read request:', { userId: req.user.id, notificationIds });
+
+  if (!Array.isArray(notificationIds)) {
+    return res.status(400).json({
+      success: false,
+      error: 'notificationIds must be an array'
+    });
+  }
+
+  // Update notifications
+  let updatedCount = 0;
+  notifications.forEach(notification => {
+    if (notification.userId === req.user.id && notificationIds.includes(notification.id)) {
+      notification.isRead = true;
+      updatedCount++;
+    }
+  });
+
+  res.json({
+    success: true,
+    message: `Marked ${updatedCount} notifications as read`,
+    updatedCount
+  });
+});
+
+// Mark all notifications as read
+app.post('/api/v1/notifications/mark-all-read', authenticate, (req, res) => {
+  console.log('Mark all as read request:', { userId: req.user.id });
+
+  let updatedCount = 0;
+  notifications.forEach(notification => {
+    if (notification.userId === req.user.id && !notification.isRead) {
+      notification.isRead = true;
+      updatedCount++;
+    }
+  });
+
+  res.json({
+    success: true,
+    message: `Marked ${updatedCount} notifications as read`,
+    updatedCount
+  });
+});
+
+// Delete notification
+app.delete('/api/v1/notifications/:id', authenticate, (req, res) => {
+  const notificationId = req.params.id;
+
+  console.log('Delete notification request:', { userId: req.user.id, notificationId });
+
+  const notificationIndex = notifications.findIndex(
+    n => n.id === notificationId && n.userId === req.user.id
+  );
+
+  if (notificationIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      error: 'Notification not found'
+    });
+  }
+
+  notifications.splice(notificationIndex, 1);
+
+  res.json({
+    success: true,
+    message: 'Notification deleted successfully'
+  });
+});
+
+// Create notification (for system use)
+app.post('/api/v1/notifications', authenticate, (req, res) => {
+  const { targetUserIds, type, title, message, relatedBoLId, relatedBoLNumber, priority, metadata } = req.body;
+
+  console.log('Create notification request:', {
+    createdBy: req.user.id,
+    targetUserIds,
+    type,
+    title
+  });
+
+  if (!targetUserIds || !Array.isArray(targetUserIds) || !type || !title || !message) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields: targetUserIds, type, title, message'
+    });
+  }
+
+  const newNotifications = targetUserIds.map(userId => ({
+    id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    userId,
+    type,
+    title,
+    message,
+    relatedBoLId,
+    relatedBoLNumber,
+    priority: priority || 'medium',
+    isRead: false,
+    createdAt: new Date().toISOString(),
+    createdBy: {
+      id: req.user.id,
+      name: `${req.user.firstName} ${req.user.lastName}`,
+      email: req.user.email,
+      role: req.user.roles[0]
+    },
+    metadata
+  }));
+
+  // Add to notifications array
+  notifications.push(...newNotifications);
+
+  res.json({
+    success: true,
+    message: `Created ${newNotifications.length} notifications`,
+    notifications: newNotifications
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Mock LoadBlock API server running on port ${PORT}`);
@@ -850,6 +1149,9 @@ app.listen(PORT, () => {
   console.log('Test users:');
   console.log('- admin@loadblock.io / 12345678 (Admin)');
   console.log('- carrier@loadblock.io / 12345678 (Carrier)');
+  console.log('- shipper@loadblock.io / 12345678 (Shipper)');
+  console.log('- broker@loadblock.io / 12345678 (Broker)');
+  console.log('- consignee@loadblock.io / 12345678 (Consignee)');
   console.log('');
   console.log('BoL API endpoints:');
   console.log('- GET /api/v1/bol - List BoLs with filtering');
@@ -865,4 +1167,12 @@ app.listen(PORT, () => {
   console.log('- POST /api/v1/pdf/preview - Preview PDF from BoL data');
   console.log('- GET /api/v1/pdf/bol/:bolNumber - Generate PDF from database BoL');
   console.log('- POST /api/v1/pdf/cleanup - Admin cleanup of temp files');
+  console.log('');
+  console.log('Notification API endpoints:');
+  console.log('- GET /api/v1/notifications - Get user notifications');
+  console.log('- GET /api/v1/notifications/stats - Get notification statistics');
+  console.log('- POST /api/v1/notifications/mark-read - Mark notifications as read');
+  console.log('- POST /api/v1/notifications/mark-all-read - Mark all as read');
+  console.log('- DELETE /api/v1/notifications/:id - Delete notification');
+  console.log('- POST /api/v1/notifications - Create notification');
 });
