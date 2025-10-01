@@ -2,7 +2,7 @@
     "name": "loadblock-chaincode",
     "version": "1.0.0",
     "description": "LoadBlock Bill of Lading Smart Contract for Hyperledger Fabric",
-    "main": "src/loadblock-chaincode.js",
+    "main": "index.js",
     "scripts": {
         "start": "fabric-chaincode-node start",
         "test": "nyc mocha test --recursive",
@@ -12,11 +12,11 @@
         "node": ">=14.0.0"
     },
     "dependencies": {
-        "fabric-contract-api": "^2.5.4",
-        "fabric-shim": "^2.5.4"
+        "fabric-contract-api": "~2.5",
+        "fabric-shim": "~2.5"
     },
     "devDependencies": {
-        "fabric-network": "^2.5.4",
+        "fabric-network": "^2.2.20",
         "mocha": "^10.0.0",
         "nyc": "^15.1.0",
         "sinon": "^14.0.0",
@@ -55,9 +55,5 @@
         "branches": 80,
         "functions": 80,
         "lines": 80
-    },
-    "fabric": {
-        "type": "node",
-        "entrypoint": "src/loadblock-chaincode.js"
     }
 }

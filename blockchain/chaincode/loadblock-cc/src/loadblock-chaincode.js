@@ -11,22 +11,22 @@ const { Contract } = require('fabric-contract-api');
  */
 class LoadBlockContract extends Contract {
 
-    constructor() {
-        super('LoadBlockContract');
-    }
-
     /**
      * Initialize the ledger with default data
      */
     async initLedger(ctx) {
         console.info('============= START : Initialize Ledger ===========');
 
+        // Get deterministic timestamp from transaction
+        const txTimestamp = ctx.stub.getTxTimestamp();
+        const initTime = new Date(txTimestamp.seconds.toInt() * 1000).toISOString();
+
         // Initialize contract metadata
         const contractInfo = {
             name: 'LoadBlock BoL Management',
             version: '1.0.0',
             description: 'Immutable Bill of Lading storage and status management',
-            initialized: new Date().toISOString(),
+            initialized: initTime,
             totalBols: 0,
             docType: 'contractInfo'
         };
@@ -44,7 +44,8 @@ class LoadBlockContract extends Contract {
         console.info('============= START : Create Approved BoL ===========');
 
         const bolObj = JSON.parse(bolData);
-        const timestamp = new Date().toISOString();
+        const txTimestamp = ctx.stub.getTxTimestamp();
+        const timestamp = new Date(txTimestamp.seconds.toInt() * 1000).toISOString();
         const txId = ctx.stub.getTxID();
 
         // Validate required fields
@@ -134,7 +135,8 @@ class LoadBlockContract extends Contract {
     async updateBoLStatus(ctx, bolNumber, newStatus, userId, notes, newIpfsHash) {
         console.info('============= START : Update BoL Status ===========');
 
-        const timestamp = new Date().toISOString();
+        const txTimestamp = ctx.stub.getTxTimestamp();
+        const timestamp = new Date(txTimestamp.seconds.toInt() * 1000).toISOString();
         const txId = ctx.stub.getTxID();
 
         // Validate status transition
@@ -298,8 +300,8 @@ class LoadBlockContract extends Contract {
      * Get all BoLs (with pagination support)
      */
     async getAllBoLs(ctx, pageSize, bookmark) {
-        const pageSize = parseInt(pageSize) || 50;
-        const iterator = await ctx.stub.getStateByRangeWithPagination('', '', pageSize, bookmark);
+        const parsedPageSize = parseInt(pageSize) || 50;
+        const iterator = await ctx.stub.getStateByRangeWithPagination('', '', parsedPageSize, bookmark);
 
         const results = [];
         while (true) {
@@ -422,7 +424,8 @@ class LoadBlockContract extends Contract {
                 info.totalBols = (info.totalBols || 0) + 1;
             }
 
-            info.lastUpdated = new Date().toISOString();
+            const txTimestamp = ctx.stub.getTxTimestamp();
+            info.lastUpdated = new Date(txTimestamp.seconds.toInt() * 1000).toISOString();
             await ctx.stub.putState('CONTRACT_INFO', Buffer.from(JSON.stringify(info)));
         }
     }

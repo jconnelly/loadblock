@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+
+// Blockchain integration
+const fabricService = require(path.join(__dirname, 'services', 'fabricService'));
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -11,7 +15,7 @@ const JWT_SECRET = 'mock-jwt-secret-for-testing';
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3003', 'http://localhost:3004'],
+  origin: ['http://localhost:3000', 'http://localhost:3003', 'http://localhost:3004', 'http://localhost:3005', 'http://localhost:3006', 'http://localhost:3007'],
   credentials: true
 }));
 
@@ -76,15 +80,23 @@ const users = [
 
 // Helper function to generate JWT token
 const generateToken = (user) => {
-  return jwt.sign(
-    {
+  try {
+    console.log('Generating token for user:', user.email);
+    const payload = {
       id: user.id,
       email: user.email,
       roles: user.roles
-    },
-    JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+    };
+    console.log('Token payload:', payload);
+    console.log('JWT_SECRET length:', JWT_SECRET.length);
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+    console.log('Token generated successfully');
+    return token;
+  } catch (error) {
+    console.error('Error generating token:', error);
+    throw new Error('Token generation failed');
+  }
 };
 
 // Helper function to verify JWT token
@@ -146,14 +158,19 @@ app.post('/api/v1/auth/login', (req, res) => {
 
   // Find user (in real app, we'd hash and compare password)
   const user = users.find(u => u.email === email);
+  console.log('User found:', user ? user.email : 'not found');
+
   if (!user || password !== '12345678') {
+    console.log('Login failed: invalid credentials');
     return res.status(400).json({
       success: false,
       message: 'Invalid email or password'
     });
   }
 
+  console.log('About to generate token...');
   const token = generateToken(user);
+  console.log('Token generated, preparing response...');
   const userResponse = {
     id: user.id,
     email: user.email,
@@ -166,6 +183,7 @@ app.post('/api/v1/auth/login', (req, res) => {
   };
 
   // Set refresh token as httpOnly cookie
+  console.log('Setting refresh token cookie...');
   res.cookie('refreshToken', 'mock-refresh-token', {
     httpOnly: true,
     secure: false, // Set to true in production with HTTPS
@@ -173,6 +191,7 @@ app.post('/api/v1/auth/login', (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 
+  console.log('Sending JSON response...');
   res.json({
     success: true,
     data: {
@@ -181,6 +200,7 @@ app.post('/api/v1/auth/login', (req, res) => {
     },
     message: 'Login successful'
   });
+  console.log('Login response sent successfully');
 });
 
 // Register endpoint
@@ -356,6 +376,9 @@ let bols = [
       },
       dotNumber: 'DOT789012',
       mcNumber: 'MC123456',
+      scacCode: 'SWFT',
+      insurancePolicy: 'Policy #SW-7890-2025, $1,000,000 Liability',
+      licenseNumber: 'GA-TL-789012',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
@@ -368,7 +391,16 @@ let bols = [
         weight: 2500,
         value: 75000,
         packaging: 'Wooden Crates',
-        hazmat: false
+        hazmat: false,
+        freightClass: '70',
+        handlingUnit: 'PLT',
+        dimensions: {
+          length: 48,
+          width: 40,
+          height: 36,
+          unit: 'in'
+        },
+        specialInstructions: 'Handle with care - fragile components'
       }
     ],
     totalWeight: 2500,
@@ -438,6 +470,9 @@ let bols = [
       },
       dotNumber: 'DOT789012',
       mcNumber: 'MC123456',
+      scacCode: 'SWFT',
+      insurancePolicy: 'Policy #SW-7890-2025, $1,000,000 Liability',
+      licenseNumber: 'GA-TL-789012',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
@@ -526,9 +561,9 @@ app.get('/api/v1/bol', authenticate, (req, res) => {
 
   // Role-based filtering
   if (req.user.roles.includes('carrier') && !req.user.roles.includes('admin')) {
-    filteredBols = filteredBols.filter(bol => bol.carrier.id === req.user.id || bol.createdBy === req.user.id);
+    filteredBols = filteredBols.filter(bol => (bol.carrier && bol.carrier.id === req.user.id) || bol.createdBy === req.user.id);
   } else if (req.user.roles.includes('shipper') && !req.user.roles.includes('admin')) {
-    filteredBols = filteredBols.filter(bol => bol.shipper.id === req.user.id || bol.createdBy === req.user.id);
+    filteredBols = filteredBols.filter(bol => (bol.shipper && bol.shipper.id === req.user.id) || bol.createdBy === req.user.id);
   }
 
   // Pagination
@@ -643,7 +678,7 @@ app.put('/api/v1/bol/:id', authenticate, (req, res) => {
 });
 
 // Update BoL status
-app.patch('/api/v1/bol/:id/status', authenticate, (req, res) => {
+app.patch('/api/v1/bol/:id/status', authenticate, async (req, res) => {
   const bolIndex = bols.findIndex(b => b.id === req.params.id);
 
   if (bolIndex === -1) {
@@ -692,6 +727,41 @@ app.patch('/api/v1/bol/:id/status', authenticate, (req, res) => {
       createdAt: new Date().toISOString(),
       noteType: 'status_change'
     });
+  }
+
+  // Blockchain integration
+  try {
+    if (existingBoL.status === 'pending' && status === 'approved') {
+      // First time approval - create BoL on blockchain
+      console.log('Creating BoL on blockchain:', updatedBoL.bolNumber);
+      const blockchainBoL = await fabricService.createApprovedBoL(updatedBoL);
+      console.log('BoL created on blockchain with txId:', blockchainBoL.blockchainTxId);
+      updatedBoL.blockchainTxId = blockchainBoL.blockchainTxId;
+    } else if (existingBoL.status !== 'pending') {
+      // Check if BoL exists on blockchain
+      try {
+        await fabricService.getBoL(updatedBoL.bolNumber);
+        // BoL exists, update it
+        console.log('Updating BoL status on blockchain:', updatedBoL.bolNumber, '→', status);
+        const blockchainBoL = await fabricService.updateBoLStatus(
+          updatedBoL.bolNumber,
+          status,
+          req.user.email,
+          notes || `Status updated to ${status}`
+        );
+        console.log('BoL status updated on blockchain, version:', blockchainBoL.version);
+      } catch (notFoundError) {
+        // BoL doesn't exist on blockchain yet, create it first
+        console.log('BoL not found on blockchain, creating it now:', updatedBoL.bolNumber);
+        const blockchainBoL = await fabricService.createApprovedBoL(updatedBoL);
+        console.log('BoL created on blockchain with txId:', blockchainBoL.blockchainTxId);
+        updatedBoL.blockchainTxId = blockchainBoL.blockchainTxId;
+      }
+    }
+  } catch (blockchainError) {
+    console.error('Blockchain operation failed:', blockchainError.message);
+    // Continue with local update even if blockchain fails
+    // In production, you might want to queue this for retry
   }
 
   bols[bolIndex] = updatedBoL;
@@ -777,9 +847,10 @@ app.get('/api/v1/bol/stats', authenticate, (req, res) => {
 });
 
 // PDF Generation endpoints
+const pdfService = require('./services/pdfService');
 
 // Generate PDF from BoL data
-app.post('/api/v1/pdf/generate', authenticate, (req, res) => {
+app.post('/api/v1/pdf/generate', authenticate, async (req, res) => {
   console.log('PDF generation request:', req.body);
 
   const { bolData } = req.body;
@@ -791,16 +862,33 @@ app.post('/api/v1/pdf/generate', authenticate, (req, res) => {
     });
   }
 
-  // Mock PDF generation response
-  res.json({
-    success: true,
-    message: 'PDF generation would be implemented with real PDF service',
-    data: {
-      bolNumber: bolData.bolNumber,
-      filename: `BOL_${bolData.bolNumber}_${Date.now()}.pdf`,
-      mockUrl: `/api/v1/pdf/download/${bolData.bolNumber}`
-    }
-  });
+  try {
+    // Use the professional PDF service
+    const pdfResult = await pdfService.generateBoLPDF(bolData, {
+      priority: 'normal',
+      includeBlockchainVerification: true
+    });
+
+    res.json({
+      success: true,
+      message: 'Professional BoL PDF generated successfully',
+      data: {
+        bolNumber: bolData.bolNumber,
+        filename: pdfResult.filename,
+        filepath: pdfResult.filepath,
+        size: pdfResult.size,
+        generatedAt: pdfResult.generatedAt,
+        downloadUrl: `/api/v1/pdf/download/${bolData.bolNumber}`
+      }
+    });
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate PDF',
+      message: error.message
+    });
+  }
 });
 
 // Preview PDF endpoint
@@ -874,6 +962,57 @@ app.post('/api/v1/pdf/cleanup', authenticate, (req, res) => {
       maxAgeHours: maxAge
     }
   });
+});
+
+// Test PDF generation endpoint - Phase 3 Week 9 Implementation
+app.get('/api/v1/pdf/test', authenticate, async (req, res) => {
+  console.log('PDF test generation request by user:', req.user.email);
+
+  try {
+    // Get first sample BoL for testing
+    const testBoL = bols[0];
+
+    // Use the professional PDF service
+    const pdfResult = await pdfService.generateBoLPDF(testBoL, {
+      priority: 'normal',
+      includeBlockchainVerification: true
+    });
+
+    res.json({
+      success: true,
+      message: 'Professional BoL PDF generated successfully with Phase 3 enhancements',
+      data: {
+        bolNumber: testBoL.bolNumber,
+        filename: pdfResult.filename,
+        filepath: pdfResult.filepath,
+        size: pdfResult.size,
+        generatedAt: pdfResult.generatedAt,
+        downloadUrl: `/api/v1/pdf/download/${testBoL.bolNumber}`,
+        phase3Enhancements: {
+          regulatoryCompliance: {
+            scacCode: testBoL.carrier.scacCode,
+            insurancePolicy: testBoL.carrier.insurancePolicy,
+            licenseNumber: testBoL.carrier.licenseNumber
+          },
+          cargoDetails: {
+            freightClass: testBoL.cargoItems[0].freightClass,
+            handlingUnit: testBoL.cargoItems[0].handlingUnit,
+            dimensions: testBoL.cargoItems[0].dimensions,
+            specialInstructions: testBoL.cargoItems[0].specialInstructions
+          },
+          professionalFormatting: true,
+          blockchainVerification: true
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Test PDF generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate test PDF',
+      message: error.message
+    });
+  }
 });
 
 // Notification System Routes
@@ -1140,6 +1279,13 @@ app.post('/api/v1/notifications', authenticate, (req, res) => {
     message: `Created ${newNotifications.length} notifications`,
     notifications: newNotifications
   });
+});
+
+// Simple test endpoint
+app.get('/api/v1/test', (req, res) => {
+  console.log('Test endpoint hit');
+  res.json({ status: 'ok', message: 'Server is working' });
+  console.log('Test response sent');
 });
 
 // Start server
