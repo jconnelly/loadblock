@@ -60,11 +60,13 @@ LoadBlock is a professional Bill of Lading (BoL) management system built on Hype
 - **Contact Management**: Private contact lists with auto-suggestions
 - **Multi-Role Users**: Users can have multiple roles with hierarchical permissions
 
-### Blockchain Integration
-- **Hyperledger Fabric**: Immutable BoL storage and audit trail
+### Blockchain Integration ✅ LIVE
+- **Hyperledger Fabric**: Immutable BoL storage and audit trail (✅ Operational)
+- **Real-Time Transactions**: BoL status updates automatically written to blockchain
 - **IPFS Storage**: Decentralized PDF document storage
-- **Version Control**: Complete history of all BoL changes
-- **AWS Managed Blockchain**: Production-ready blockchain infrastructure
+- **Version Control**: Complete history of all BoL changes with transaction IDs
+- **Live Verification**: End-to-end blockchain transactions confirmed (October 1, 2025)
+- **Production-Ready**: Ready for AWS Managed Blockchain deployment
 
 ## 🛠️ Development
 
@@ -105,6 +107,50 @@ npm test              # Jest tests
 docker-compose up -d              # Start all services
 docker-compose down               # Stop all services
 docker-compose logs backend       # View backend logs
+```
+
+**Blockchain Development (WSL2 Ubuntu)** ✅ NEW
+```bash
+# Prerequisites: WSL2 with Ubuntu 22.04, Docker Desktop with WSL2 backend
+
+# 1. Install Hyperledger Fabric and samples
+curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh
+chmod +x install-fabric.sh
+./install-fabric.sh
+
+# 2. Start Fabric test network with LoadBlock channel
+cd ~/fabric-samples/test-network
+./network.sh up createChannel -c loadblock-channel -ca
+
+# 3. Deploy LoadBlock chaincode
+./network.sh deployCC -ccn loadblock \
+  -ccp ~/projects/loadblock/blockchain/chaincode/loadblock-cc \
+  -ccl javascript -c loadblock-channel
+
+# 4. Initialize the ledger
+peer chaincode invoke -o localhost:7050 \
+  --ordererTLSHostnameOverride orderer.example.com --tls \
+  --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
+  -C loadblock-channel -n loadblock \
+  --peerAddresses localhost:7051 \
+  --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" \
+  --peerAddresses localhost:9051 \
+  --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt" \
+  -c '{"function":"initLedger","Args":[]}'
+
+# 5. Setup backend admin wallet
+cd ~/projects/loadblock/backend
+cp -r /mnt/c/Development/AI_Development/loadblock/backend ~/projects/loadblock/
+npm install
+node scripts/enrollAdmin.js
+
+# 6. Start backend with blockchain integration
+node src/mock-server.js
+
+# 7. Verify blockchain (in another terminal)
+cd ~/fabric-samples/test-network
+peer chaincode query -C loadblock-channel -n loadblock \
+  -c '{"Args":["getContractInfo"]}'
 ```
 
 ## 🔧 Configuration
